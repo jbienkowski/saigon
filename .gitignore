@@ -1,6 +1,6 @@
 # Output files
-out/*
-!out/.gitkeep
+notebooks/out/*
+!notebooks/out/.gitkeep
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
