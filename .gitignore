@@ -1,3 +1,7 @@
+# Data
+data/*
+!data/.gitkeep
+
 # Output files
 notebooks/out/*
 !notebooks/out/.gitkeep

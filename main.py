@@ -1,0 +1,20 @@
+import logging
+from core.hd5_reader import Hd5Reader
+
+logging.basicConfig(
+    handlers=[logging.StreamHandler()],
+    level=logging.INFO,
+    format="[%(asctime)s] %(levelname)s [%(name)s.%(funcName)s:%(lineno)d] %(message)s",
+    datefmt="%Y-%m-%dT%H:%M:%S",
+)
+logger = logging.getLogger(__name__)
+
+
+if __name__ == "__main__":
+    """Script entry point"""
+    logger.info("Bonjour!")
+
+    hdf = Hd5Reader("data/LEN-DB.hdf5")
+    hdf.plot_an("AN/XV_FTGH_1515527757.9699998")
+
+    logger.info("Au revoir!")
