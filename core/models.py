@@ -2,8 +2,8 @@ from datetime import datetime, timedelta
 
 
 class DataObject:
-    """Placeholder class for data object.
-    """
+    """Placeholder class for data object."""
+
     def __init__(self):
         self.id = None
         self.type = None
@@ -41,4 +41,4 @@ class DataObject:
 
     def get_ts_short(self):
         dt = self.get_ts_datetime()
-        return dt.strftime('%Y-%m-%d %H:%M:%S')
+        return dt.strftime("%Y-%m-%d %H:%M:%S")
