@@ -19,6 +19,7 @@ if __name__ == "__main__":
     noise_obj = hdf.find_dataobject("AN/XV_FTGH_1515527757.9699998")
     eq_obc = hdf.find_dataobject("EQ/AF_WDLM_1431223231.095")
     p = Plotter()
-    p.plot_time_series(eq_obc)
+    p.plot_spectrogram(noise_obj)
+    p.plot_time_series(noise_obj)
 
     logger.info("Au revoir!")
