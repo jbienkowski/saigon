@@ -1,5 +1,6 @@
 import logging
 from core.hd5_reader import Hd5Reader
+from core.plotter import Plotter
 
 logging.basicConfig(
     handlers=[logging.StreamHandler()],
@@ -15,6 +16,9 @@ if __name__ == "__main__":
     logger.info("Bonjour!")
 
     hdf = Hd5Reader("data/LEN-DB.hdf5")
-    hdf.plot_an("AN/XV_FTGH_1515527757.9699998")
+    noise_obj = hdf.find_dataobject("AN/XV_FTGH_1515527757.9699998")
+    eq_obc = hdf.find_dataobject("EQ/AF_WDLM_1431223231.095")
+    p = Plotter()
+    p.plot_an(eq_obc)
 
     logger.info("Au revoir!")
