@@ -10,7 +10,7 @@ class Plotter:
     def __init__(self):
         pass
 
-    def plot_an(self, do: DataObject):
+    def plot_time_series(self, do: DataObject):
         timespan = do.get_timespan()
         d0 = pd.DataFrame(data=do.data[0], index=timespan)
         d1 = pd.DataFrame(data=do.data[1], index=timespan)
