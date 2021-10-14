@@ -16,8 +16,7 @@ if __name__ == "__main__":
     logger.info("Bonjour!")
 
     hdf = Hd5Reader("data/LEN-DB.hdf5")
-    noise_obj = hdf.find_dataobject("AN/XV_FTGH_1515527757.9699998")
-    eq_obc = hdf.find_dataobject("EQ/AF_WDLM_1431223231.095")
+    eq_obc = hdf.get_random_object("EQ")
     p = Plotter()
     p.plot_all(eq_obc)
     # p.plot_time_series(noise_obj)

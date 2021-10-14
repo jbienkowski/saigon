@@ -37,14 +37,17 @@ class Plotter:
         s1, f1, t1, _ = plt.specgram(x=do.data[1], Fs=20)
         s2, f2, t2, _ = plt.specgram(x=do.data[2], Fs=20)
 
+        axes[0, 1].clear()
         axes[0, 1].set_title("Vertical (Z) component")
         axes[0, 1].pcolormesh(t0, f0, s0, shading="gouraud")
         axes[0, 1].set(xlabel="Time [sec]", ylabel="Frequency [Hz]")
 
+        axes[1, 1].clear()
         axes[1, 1].set_title("Horizontal (N) component")
         axes[1, 1].pcolormesh(t1, f1, s1, shading="gouraud")
         axes[1, 1].set(xlabel="Time [sec]", ylabel="Frequency [Hz]")
 
+        axes[2, 1].clear()
         axes[2, 1].set_title("Horizontal (E) component")
         axes[2, 1].pcolormesh(t2, f2, s2, shading="gouraud")
         axes[2, 1].set(xlabel="Time [sec]", ylabel="Frequency [Hz]")
@@ -54,7 +57,7 @@ class Plotter:
         type = "Earthquake" if do.type == "EQ" else "Noise"
         plt.suptitle(f"{type}: {do.net}.{do.sta} at {do.get_ts_short()}", fontsize=14)
 
-        plt.savefig(f"out/{do.type}-{do.id}.pdf")
+        plt.savefig(f"out/{do.type}-{do.id}.png")
 
     def plot_time_series(self, do: DataObject):
         timespan = do.get_timespan()

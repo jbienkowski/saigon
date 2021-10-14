@@ -1,5 +1,5 @@
-import logging
 import h5py
+import random
 import numpy as np
 from .models import DataObject
 
@@ -7,6 +7,20 @@ from .models import DataObject
 class Hd5Reader:
     def __init__(self, path: str):
         self._path = path
+
+    def get_random_object(self, type: str) -> DataObject:
+        with h5py.File(self._path, "r") as f:
+            id = list(f[type.upper()])[random.randint(0, 6e5)]
+            obj = f.get(f"{type.upper()}/{id}")
+            do = DataObject()
+            do.type = type
+            do.id = id
+            do.data = np.array(obj)
+
+            for a in obj.attrs:
+                setattr(do, a, obj.attrs[a])
+
+            return do
 
     def find_dataobject(self, id: str) -> DataObject:
         with h5py.File(self._path, "r") as f:
