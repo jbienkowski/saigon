@@ -1,6 +1,10 @@
 # MacOS artifacts
 .DS_Store
 
+# Logs
+log/*
+!log/.gitkeep
+
 # Data
 data/*
 !data/.gitkeep
