@@ -21,9 +21,10 @@ if __name__ == "__main__":
         cfg = json.load(f)
 
     hdf = Hd5Reader("data/LEN-DB.hdf5")
-    eq_obc = hdf.get_random_object("EQ")
-    p = Plotter()
-    p.plot_all(eq_obc)
+    hdf.prepare_data()
+    # eq_obc = hdf.get_random_object("EQ")
+    # p = Plotter()
+    # p.plot_all(eq_obc)
     # p.plot_time_series(noise_obj)
 
     logger.info("Au revoir!")
