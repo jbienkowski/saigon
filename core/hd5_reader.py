@@ -19,13 +19,11 @@ class Hd5Reader:
 
         len_keys = len(keys)
 
-        try:
-            with h5py.File(f"data/{file_name}", "a") as f:
-                f.create_dataset("keys", shape=(len_keys,), dtype="S50")
-                f.create_dataset("data", shape=(len_keys, 1620), dtype="float64")
-                f.create_dataset("labels", shape=(len_keys,), dtype="i8")
-        except Exception as ex:
-            print(str(ex))
+        # Init the HDF5 file
+        with h5py.File(f"data/{file_name}", "a") as f:
+            f.create_dataset("keys", shape=(len_keys,), dtype="S50")
+            f.create_dataset("data", shape=(len_keys, 1620), dtype="float64")
+            f.create_dataset("labels", shape=(len_keys,), dtype="i8")
 
         with h5py.File(self._path, "r") as f1:
             for idx, key in enumerate(keys):
