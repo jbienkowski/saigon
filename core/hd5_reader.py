@@ -22,8 +22,8 @@ class Hd5Reader:
         try:
             with h5py.File(f"data/{file_name}", "a") as f:
                 f.create_dataset("keys", shape=(len_keys,), dtype="S50")
-                f.create_dataset("data", shape=(len_keys, 1620))
-                f.create_dataset("labels", shape=(len_keys,), dtype="i1")
+                f.create_dataset("data", shape=(len_keys, 1620), dtype="float64")
+                f.create_dataset("labels", shape=(len_keys,), dtype="i8")
         except Exception as ex:
             print(str(ex))
 
