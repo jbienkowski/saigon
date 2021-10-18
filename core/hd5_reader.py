@@ -20,7 +20,7 @@ class Hd5Reader:
         len_keys = len(keys)
 
         try:
-            with h5py.File(file_name, "a") as f:
+            with h5py.File(f"data/{file_name}", "a") as f:
                 f.create_dataset("keys", shape=(len_keys,), dtype="S50")
                 f.create_dataset("data", shape=(len_keys, 1620))
                 f.create_dataset("labels", shape=(len_keys,), dtype="i1")
@@ -31,7 +31,7 @@ class Hd5Reader:
             for idx, key in enumerate(keys):
                 if idx % 100 == 0:
                     print(f"{idx}/{len_keys}")
-                with h5py.File(file_name, "a") as f2:
+                with h5py.File(f"data/{file_name}", "a") as f2:
                     f2["keys"][idx] = bytes(key, encoding="utf-8")
                     f2["data"][idx] = np.array(f1.get(key)).reshape(1620)
                     f2["labels"][idx] = 0 if key.startswith("AN") else 1
