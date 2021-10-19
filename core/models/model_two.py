@@ -1,5 +1,10 @@
+import os
 from .base.model_base import ModelBase
-import tensorflow as tf
+from time import strftime
+import tensorflow.compat.v1 as tf
+
+tf.disable_v2_behavior()
+
 import numpy as np
 
 
@@ -13,6 +18,26 @@ class ModelTwo(ModelBase):
 
     def _define_model(self):
         pass
+
+    def setup_layer(self, input, weight_dim, bias_dim, name):
+        with tf.name_scope("name"):
+            initial_w = tf.truncated_normal(shape=weight_dim, stddev=0.1, seed=42)
+            w = tf.Variable(initial_value=initial_w, name="W")
+
+            initial_b = tf.constant(value=0.0, shape=bias_dim)
+            b = tf.Variable(initial_value=initial_b, name="B")
+
+            layer_in = tf.matmul(input, w) + b
+
+            if name == "out":
+                layer_out = tf.nn.softmax(layer_in)
+            else:
+                layer_out = tf.nn.relu(layer_in)
+
+            tf.summary.histogram("weights", w)
+            tf.summary.histogram("biases", b)
+
+            return layer_out
 
     def next_batch(self, batch_size, data, labels):
         global num_examples
@@ -33,12 +58,11 @@ class ModelTwo(ModelBase):
         tf.compat.v1.disable_eager_execution()
 
         self.y_train = np.eye(2)[self.y_train]
+        self.y_test = np.eye(2)[self.y_test]
 
         # Init TF graph
-        X = tf.compat.v1.placeholder(
-            tf.float32, shape=[None, self.total_inputs], name="X"
-        )
-        Y = tf.compat.v1.placeholder(tf.float32, shape=[None, 2], name="labels")
+        X = tf.placeholder(tf.float32, shape=[None, self.total_inputs], name="X")
+        Y = tf.placeholder(tf.float32, shape=[None, self.NR_CLASSES], name="labels")
 
         n_hidden1 = 512
         n_hidden2 = 64
@@ -63,13 +87,25 @@ class ModelTwo(ModelBase):
             layer_2, weight_dim=[n_hidden2, 2], bias_dim=[2], name="out"
         )
 
+        # Folder for Tensorboard
+
+        folder_name = f"{self.model_name} at {strftime('%H:%M')}"
+        directory = os.path.join("log/", folder_name)
+
+        try:
+            os.makedirs(directory)
+        except OSError as exception:
+            print(exception.strerror)
+        else:
+            print("Successfully created dirs!")
+
         with tf.name_scope("loss_calc"):
             loss = tf.reduce_mean(
                 tf.nn.softmax_cross_entropy_with_logits(labels=Y, logits=output)
             )
 
         with tf.name_scope("optimizer"):
-            optimizer = tf.compat.v1.train.AdamOptimizer(self.learning_rate)
+            optimizer = tf.train.AdamOptimizer(learning_rate=self.learning_rate)
             train_step = optimizer.minimize(loss)
 
         with tf.name_scope("accuracy_calc"):
@@ -84,16 +120,16 @@ class ModelTwo(ModelBase):
         #     x_image = tf.reshape(X, [-1, 28, 28, 1])
         #     tf.summary.image('image_input', x_image, max_outputs=4)
 
-        sess = tf.compat.v1.Session()
+        sess = tf.Session()
 
-        merged_summary = tf.compat.v1.summary.merge_all()
+        merged_summary = tf.summary.merge_all()
 
-        train_writer = tf.compat.v1.summary.FileWriter("log" + "/train")
+        train_writer = tf.summary.FileWriter("log" + "/train")
         train_writer.add_graph(sess.graph)
 
-        validation_writer = tf.compat.v1.summary.FileWriter("log" + "/validation")
+        validation_writer = tf.summary.FileWriter("log" + "/validation")
 
-        init = tf.compat.v1.global_variables_initializer()
+        init = tf.global_variables_initializer()
         sess.run(init)
 
         num_examples = self.y_train.shape[0]
