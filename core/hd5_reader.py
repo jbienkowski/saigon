@@ -9,8 +9,30 @@ class Hd5Reader:
     def __init__(self, path: str):
         self._path = path
 
+    def get_subset_of_processed_data(self, size):
+        keys = None
+        data = None
+        labels = None
+        with h5py.File(self._path, "r") as f:
+            keys = f["keys"][:size]
+            data = f["data"][:size]
+            labels = f["labels"][:size]
+            return (keys, data, labels)
+
+    def get_data(self, idx_start, idx_end, idx_slice):
+        x_train = None
+        y_train = None
+        x_test = None
+        y_test = None
+        with h5py.File(self._path, "r") as f:
+            x_train = f["data"][idx_start:idx_slice]
+            y_train = f["labels"][idx_start:idx_slice]
+            x_test = f["data"][idx_slice:idx_end]
+            y_test = f["labels"][idx_slice:idx_end]
+            return (x_train, y_train, x_test, y_test)
+
     def prepare_data(self):
-        file_name = "processed_data.hdf5"
+        file_name = "LEN-DB-processed.hdf5"
         keys = []
         with h5py.File(self._path, "r") as f:
             [keys.append(f"AN/{an}") for an in f["AN"].keys()]

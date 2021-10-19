@@ -2,7 +2,7 @@
     "tf_log_path": "log",
     "classes": ["earthquake", "noise"],
     "component_count": 3,
-    "component_samples_count": 520,
+    "component_samples_count": 540,
     "classes_count": 2,
     "validation_size": 10000
 }

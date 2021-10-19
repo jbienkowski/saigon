@@ -1,7 +1,10 @@
 import logging
 import json
+
 from core.hd5_reader import Hd5Reader
 from core.plotter import Plotter
+from core.models.model_one import ModelOne
+from core.models.model_two import ModelTwo
 
 logging.basicConfig(
     handlers=[logging.StreamHandler()],
@@ -20,8 +23,16 @@ if __name__ == "__main__":
     with open("./config.json", "r") as f:
         cfg = json.load(f)
 
-    hdf = Hd5Reader("data/LEN-DB.hdf5")
-    hdf.prepare_data()
+    hdf = Hd5Reader("data/LEN-DB-processed.hdf5")
+    (x_train, y_train, x_test, y_test) = hdf.get_data(0, 10000, 8000)
+    x_train *= 1000000
+    x_test *= 1000000
+    m2 = ModelTwo(
+        cfg=cfg, x_train=x_train, y_train=y_train, x_test=x_test, y_test=y_test
+    )
+    m2.run()
+
+    # hdf.get_subset_of_processed_data(10000)
     # eq_obc = hdf.get_random_object("EQ")
     # p = Plotter()
     # p.plot_all(eq_obc)
