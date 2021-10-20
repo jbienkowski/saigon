@@ -8,7 +8,7 @@ tf.disable_v2_behavior()
 import numpy as np
 
 
-class ModelTwo(ModelBase):
+class Model002(ModelBase):
     num_examples = 0
     index_in_epoch = 0
 

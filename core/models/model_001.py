@@ -3,7 +3,7 @@ from keras.models import Model
 from keras import layers
 
 
-class ModelOne(ModelBase):
+class Model001(ModelBase):
     def __init__(self, cfg, **kwargs):
         ModelBase.__init__(self, cfg=cfg, model_name="model_one", **kwargs)
         self._define_model()
