@@ -1,4 +1,6 @@
+import numpy as np
 from datetime import datetime, timedelta
+from scipy.signal import spectrogram
 
 
 class DataObject:
@@ -42,3 +44,14 @@ class DataObject:
     def get_ts_short(self):
         dt = self.get_ts_datetime()
         return dt.strftime("%Y-%m-%d %H:%M:%S")
+
+    def get_flattened_data(self):
+        return np.array(self.data).reshape(1620)
+
+    def get_spectrograms(self):
+        spectrograms = []
+        for d in self.data:
+            spectrograms.append(
+                [spectrogram(d, fs=20)]
+            )
+        return spectrograms

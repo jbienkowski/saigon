@@ -9,26 +9,47 @@ class Hd5Reader:
     def __init__(self, path: str):
         self._path = path
 
-    def get_subset_of_processed_data(self, size):
-        keys = None
-        data = None
-        labels = None
+    def get_subset_of_processed_data(self, train_size, test_size, valid_size):
+        total_size = train_size + test_size + valid_size
+        chunk = int(total_size / 2)
+        eqs = []
+        ans = []
         with h5py.File(self._path, "r") as f:
-            keys = f["keys"][:size]
-            data = f["data"][:size]
-            labels = f["labels"][:size]
-            return (keys, data, labels)
+
+            keys_eq = list(f["EQ"])[:chunk]
+            for key_eq in keys_eq:
+                eq = f.get(f"EQ/{key_eq}")
+                do = self.to_dataobject(eq)
+                eqs.append(do)
+
+            keys_ans = list(f["AN"])[:chunk]
+            for key_an in keys_ans:
+                an = f.get(f"AN/{key_an}")
+                do = self.to_dataobject(an)
+                ans.append(do)
+
+        combined = eqs + ans
+        random.shuffle(combined)
+        return (
+            combined[:train_size],
+            combined[train_size : train_size + test_size],
+            combined[train_size + test_size : train_size + test_size + valid_size],
+        )
 
     def get_data(self, idx_start, idx_end, idx_slice):
         x_train = None
         y_train = None
+        keys_train = None
         x_test = None
         y_test = None
+        keys_test = None
         with h5py.File(self._path, "r") as f:
             x_train = f["data"][idx_start:idx_slice]
             y_train = f["labels"][idx_start:idx_slice]
+            keys_train = f["keys"][idx_start:idx_slice]
             x_test = f["data"][idx_slice:idx_end]
             y_test = f["labels"][idx_slice:idx_end]
+            keys_test = f["keys"][idx_slice:idx_end]
             return (x_train, y_train, x_test, y_test)
 
     def prepare_data(self):
@@ -69,6 +90,17 @@ class Hd5Reader:
                 setattr(do, a, obj.attrs[a])
 
             return do
+
+    def to_dataobject(self, obj) -> DataObject:
+        do = DataObject()
+        do.type = obj.name.split("/")[1]
+        do.id = obj.name.split("/")[2]
+        do.data = np.array(obj)
+
+        for a in obj.attrs:
+            setattr(do, a, obj.attrs[a])
+
+        return do
 
     def find_dataobject(self, id: str) -> DataObject:
         with h5py.File(self._path, "r") as f:
