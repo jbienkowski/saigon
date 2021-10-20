@@ -40,8 +40,8 @@ class ModelBase:
         self.model.fit(
             self.x_train,
             self.y_train,
-            batch_size=self.samples_per_batch,
-            epochs=self.epochs,
+            batch_size=self.SAMPLES_PER_BATCH,
+            epochs=self.EPOCHS,
             callbacks=[self.get_tensorboard()],
             verbose=0,
             validation_data=(self.x_test, self.y_test),

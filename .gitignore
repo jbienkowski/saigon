@@ -9,6 +9,9 @@ log/*
 data/*
 !data/.gitkeep
 
+# Jupyter downloaded files
+notebooks/data
+
 # Output files
 out/*
 !out/.gitkeep

@@ -39,17 +39,13 @@ class Hd5Reader:
     def get_data(self, idx_start, idx_end, idx_slice):
         x_train = None
         y_train = None
-        keys_train = None
         x_test = None
         y_test = None
-        keys_test = None
         with h5py.File(self._path, "r") as f:
             x_train = f["data"][idx_start:idx_slice]
             y_train = f["labels"][idx_start:idx_slice]
-            keys_train = f["keys"][idx_start:idx_slice]
             x_test = f["data"][idx_slice:idx_end]
             y_test = f["labels"][idx_slice:idx_end]
-            keys_test = f["keys"][idx_slice:idx_end]
             return (x_train, y_train, x_test, y_test)
 
     def prepare_data(self):
@@ -58,14 +54,14 @@ class Hd5Reader:
         with h5py.File(self._path, "r") as f:
             [keys.append(f"AN/{an}") for an in f["AN"].keys()]
             [keys.append(f"EQ/{eq}") for eq in f["EQ"].keys()]
-        random.shuffle(keys)
 
+        random.shuffle(keys)
         len_keys = len(keys)
 
         # Init the HDF5 file
         with h5py.File(f"data/{file_name}", "a") as f:
             f.create_dataset("keys", shape=(len_keys,), dtype="S50")
-            f.create_dataset("data", shape=(len_keys, 1620), dtype="float64")
+            f.create_dataset("data", shape=(len_keys, 3, 540), dtype="float64")
             f.create_dataset("labels", shape=(len_keys,), dtype="i8")
 
         with h5py.File(self._path, "r") as f1:
@@ -74,8 +70,8 @@ class Hd5Reader:
                     print(f"{idx}/{len_keys}")
                 with h5py.File(f"data/{file_name}", "a") as f2:
                     f2["keys"][idx] = bytes(key, encoding="utf-8")
-                    f2["data"][idx] = np.array(f1.get(key)).reshape(1620)
-                    f2["labels"][idx] = 0 if key.startswith("AN") else 1
+                    f2["data"][idx] = np.array(f1.get(key))
+                    f2["labels"][idx] = 1 if key.split("/")[0].lower() == "eq" else 0
 
     def get_random_object(self, type: str) -> DataObject:
         with h5py.File(self._path, "r") as f:
