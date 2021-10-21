@@ -62,7 +62,7 @@ class Hd5Reader:
         with h5py.File(f"data/{file_name}", "a") as f:
             f.create_dataset("keys", shape=(len_keys,), dtype="S50")
             f.create_dataset("data", shape=(len_keys, 3, 540), dtype="float64")
-            f.create_dataset("labels", shape=(len_keys,), dtype="i8")
+            f.create_dataset("labels", shape=(len_keys,), dtype="i4")
 
         with h5py.File(self._path, "r") as f1:
             for idx, key in enumerate(keys):
