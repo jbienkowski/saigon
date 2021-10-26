@@ -1,4 +1,9 @@
 {
+    "len_path_db": "data/LEN-DB.hdf5",
+    "len_path_db_processed": "data/LEN-DB-processed.hdf5",
+    "stead_path_csv": "data/STEAD.csv",
+    "stead_path_db": "data/STEAD.hdf5",
+    "stead_path_db_processed": "data/STEAD-processed.hdf5",
     "tf_log_path": "log",
     "classes": ["earthquake", "noise"],
     "component_count": 3,

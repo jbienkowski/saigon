@@ -2,14 +2,14 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 import pandas as pd
 import numpy as np
-from .entities import DataObject
+from .entities import LenDataObject
 
 
-class Plotter:
+class LenPlotter:
     def __init__(self):
         pass
 
-    def plot_all(self, do: DataObject):
+    def plot_all(self, do: LenDataObject):
         timespan = do.get_timespan()
         d0 = pd.DataFrame(data=do.data[0], index=timespan)
         d1 = pd.DataFrame(data=do.data[1], index=timespan)
@@ -60,7 +60,7 @@ class Plotter:
 
         plt.savefig(f"out/{do.type}-{do.id}.png")
 
-    def plot_time_series(self, do: DataObject):
+    def plot_time_series(self, do: LenDataObject):
         timespan = do.get_timespan()
         d0 = pd.DataFrame(data=do.data[0], index=timespan)
         d1 = pd.DataFrame(data=do.data[1], index=timespan)
@@ -92,7 +92,7 @@ class Plotter:
 
         plt.savefig(f"out/{do.type}-{do.id}-series.png")
 
-    def plot_spectrogram(self, do: DataObject):
+    def plot_spectrogram(self, do: LenDataObject):
         s0, f0, t0, _ = plt.specgram(x=do.data[0], Fs=20)
         s1, f1, t1, _ = plt.specgram(x=do.data[1], Fs=20)
         s2, f2, t2, _ = plt.specgram(x=do.data[2], Fs=20)

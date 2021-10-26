@@ -1,11 +1,10 @@
 import h5py
 import random
 import numpy as np
-from numpy import savez_compressed
-from .entities import DataObject
+from .entities import LenDataObject
 
 
-class Hd5Reader:
+class LenReader:
     def __init__(self, path: str):
         self._path = path
 
@@ -73,11 +72,11 @@ class Hd5Reader:
                     f2["data"][idx] = np.array(f1.get(key))
                     f2["labels"][idx] = 1 if key.split("/")[0].lower() == "eq" else 0
 
-    def get_random_object(self, type: str) -> DataObject:
+    def get_random_object(self, type: str) -> LenDataObject:
         with h5py.File(self._path, "r") as f:
             id = list(f[type.upper()])[random.randint(0, 6e5)]
             obj = f.get(f"{type.upper()}/{id}")
-            do = DataObject()
+            do = LenDataObject()
             do.type = type
             do.id = id
             do.data = np.array(obj)
@@ -87,8 +86,8 @@ class Hd5Reader:
 
             return do
 
-    def to_dataobject(self, obj) -> DataObject:
-        do = DataObject()
+    def to_dataobject(self, obj) -> LenDataObject:
+        do = LenDataObject()
         do.type = obj.name.split("/")[1]
         do.id = obj.name.split("/")[2]
         do.data = np.array(obj)
@@ -98,10 +97,10 @@ class Hd5Reader:
 
         return do
 
-    def find_dataobject(self, id: str) -> DataObject:
+    def find_dataobject(self, id: str) -> LenDataObject:
         with h5py.File(self._path, "r") as f:
             obj = f.get(id)
-            do = DataObject()
+            do = LenDataObject()
             do.type = id.split("/")[0]
             do.id = id.split("/")[1]
             do.data = np.array(obj)
