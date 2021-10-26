@@ -27,15 +27,15 @@ class SteadPlotter:
         sns.lineplot(data=d2, ax=axes[2, 0], linewidth=1, legend=None)
 
         axes[0, 0].set_title("Horizontal (E) component")
-        axes[0, 0].set(xlabel="Time (UTC)", ylabel="Velocity [$km \cdot s^{-1}$]")
+        axes[0, 0].set(xlabel="Time (UTC)", ylabel="Amplitude counts")
         axes[0, 0].locator_params(nbins=6, axis="y")
 
         axes[1, 0].set_title("Horizontal (N) component")
-        axes[1, 0].set(xlabel="Time (UTC)", ylabel="Velocity [$km \cdot s^{-1}$]")
+        axes[1, 0].set(xlabel="Time (UTC)", ylabel="Amplitude counts")
         axes[1, 0].locator_params(nbins=6, axis="y")
 
         axes[2, 0].set_title("Vertical (Z) component")
-        axes[2, 0].set(xlabel="Time (UTC)", ylabel="Velocity [$km \cdot s^{-1}$]")
+        axes[2, 0].set(xlabel="Time (UTC)", ylabel="Amplitude counts")
         axes[2, 0].locator_params(nbins=6, axis="y")
 
         s0, f0, t0, _ = plt.specgram(x=comp_e, Fs=100)
@@ -60,9 +60,9 @@ class SteadPlotter:
         plt.subplots_adjust(top=0.88)
 
         type = "Earthquake" if do.trace_category == "earthquake_local" else "Noise"
-        plt.suptitle(f"{type}: {do.network_code}.{do.receiver_code} at {do.get_ts_short()}", fontsize=14)
+        plt.suptitle(f"{type}: {do.trace_name} at {do.get_ts_short()}", fontsize=14)
 
-        plt.savefig(f"out/{do.trace_category}-{do.trace_name}.png")
+        plt.savefig(f"out/{do.trace_name}.png")
 
     def plot_time_series(self, do: SteadDataObject):
         timespan = do.get_timespan()

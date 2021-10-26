@@ -9,6 +9,10 @@ class SteadDataObject:
 
     def get_component(self, component: str) -> list:
         # There are 3 channels: first row: E channel, second row: N channel, third row: Z channel
+        # After rotating:
+        # First column (E) becomes last row
+        # Second column (N) becomes middle row
+        # Third column (Z) becomes first row
         rotated = np.rot90(self.data, k=1, axes=(0,1))
         if component.lower() == "e":
             return rotated[2]

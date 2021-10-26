@@ -30,8 +30,6 @@ if __name__ == "__main__":
 
     stead = SteadReader(cfg)
     stead.prepare_data()
-    # stead_data = stead.get_event_data(1,10000)
-
     # stead_plotter = SteadPlotter()
     # stead_plotter.plot_all(stead_data[0])
 
