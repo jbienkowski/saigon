@@ -10,6 +10,18 @@ class SteadReader:
     def __init__(self, cfg):
         self._cfg = cfg
 
+    def get_processed_data(self, idx_start, idx_end, idx_slice):
+        x_train = None
+        y_train = None
+        x_test = None
+        y_test = None
+        with h5py.File(self._cfg["stead_path_db_processed"], "r") as f:
+            x_train = f["data"][idx_start:idx_slice]
+            y_train = f["labels"][idx_start:idx_slice]
+            x_test = f["data"][idx_slice:idx_end]
+            y_test = f["labels"][idx_slice:idx_end]
+            return (x_train, y_train, x_test, y_test)
+
     def get_data_by_evi(self, evi):
         dtfl = h5py.File(self._cfg["stead_path_db"], "r")
         dataset = dtfl.get(f"data/{evi}")

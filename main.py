@@ -10,6 +10,7 @@ from core.stead_plotter import SteadPlotter
 
 from core.models.model_001 import Model001
 from core.models.model_002 import Model002
+from core.models.model_003 import Model003
 
 logging.basicConfig(
     handlers=[logging.StreamHandler()],
@@ -28,25 +29,12 @@ if __name__ == "__main__":
     with open("./config.json", "r") as f:
         cfg = json.load(f)
 
+    # m3 = Model003(cfg)
+
     stead = SteadReader(cfg)
-    stead.prepare_data()
-    # stead_plotter = SteadPlotter()
-    # stead_plotter.plot_all(stead_data[0])
+    stead_plotter = SteadPlotter()
 
-    # len = LenReader(cfg["len_path"])
-    # hdf.prepare_data()
-    # (x_train, y_train, x_test, y_test) = hdf.get_data(0, 4000, 3000)
-    # x_train *= 1000000
-    # x_test *= 1000000
-    # m2 = Model001(
-    #     cfg=cfg, x_train=x_train, y_train=y_train, x_test=x_test, y_test=y_test
-    # )
-    # m2.fit_model()
-
-    # hdf.get_subset_of_processed_data(10000)
-    # eq_obc = hdf.get_random_object("EQ")
-    # p = LenPlotter()
-    # p.plot_all(eq_obc)
-    # p.plot_time_series(noise_obj)
+    stead_data = stead.get_event_data(10,11)
+    stead_plotter.plot_all(stead_data[0])
 
     logger.info("Au revoir!")
