@@ -62,7 +62,7 @@ class SteadReader:
 
         return streams
 
-    def prepare_data(self):
+    def prepare_mixed_data(self):
         keys = []
 
         df = pd.read_csv(self._cfg["stead_path_csv"])
@@ -87,7 +87,7 @@ class SteadReader:
         len_keys = len(keys)
 
         # Init the HDF5 file
-        with h5py.File(self._cfg["stead_path_db_processed"], "a") as f:
+        with h5py.File(self._cfg["stead_path_db_processed_mixed"], "a") as f:
             f.create_dataset("keys", shape=(len_keys,), dtype="S50")
             f.create_dataset("data", shape=(len_keys, 3, 6000), dtype="float32")
             f.create_dataset("labels", shape=(len_keys,), dtype="i4")
@@ -96,10 +96,36 @@ class SteadReader:
             if idx % 100 == 0:
                 print(f"{idx}/{len_keys}")
             do = self.get_data_by_evi(key)
-            with h5py.File(self._cfg["stead_path_db_processed"], "a") as f:
+            with h5py.File(self._cfg["stead_path_db_processed_mixed"], "a") as f:
                 f["keys"][idx] = bytes(key, encoding="utf-8")
                 f["data"][idx] = do.get_components()
                 f["labels"][idx] = 1 if do.trace_name.lower().endswith("ev") else 0
+
+    def prepare_gan_data(self):
+        df = pd.read_csv(self._cfg["stead_path_csv"])
+
+        df_eq = df[
+            (df.trace_category == "earthquake_local")
+            & (df.source_distance_km <= 75)
+            & (df.source_magnitude > 1.5)
+        ]
+        eq_list = df_eq["trace_name"].to_list()[:100000]
+
+        random.shuffle(eq_list)
+        len_keys = len(eq_list)
+
+        # Init the HDF5 file
+        with h5py.File(self._cfg["stead_path_db_processed_gan"], "a") as f:
+            f.create_dataset("keys", shape=(len_keys,), dtype="S50")
+            f.create_dataset("data", shape=(len_keys, 3, 6000), dtype="float32")
+
+        for idx, key in enumerate(eq_list):
+            if idx % 100 == 0:
+                print(f"{idx}/{len_keys}")
+            do = self.get_data_by_evi(key)
+            with h5py.File(self._cfg["stead_path_db_processed_gan"], "a") as f:
+                f["keys"][idx] = bytes(key, encoding="utf-8")
+                f["data"][idx] = do.get_components()
 
     def to_dataobject(self, obj) -> SteadDataObject:
         do = SteadDataObject()

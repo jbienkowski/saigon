@@ -32,9 +32,11 @@ if __name__ == "__main__":
     # m3 = Model003(cfg)
 
     stead = SteadReader(cfg)
-    stead_plotter = SteadPlotter()
+    # stead_plotter = SteadPlotter()
 
-    stead_data = stead.get_event_data(10,11)
-    stead_plotter.plot_all(stead_data[0])
+    stead.prepare_gan_data()
+
+    # stead_data = stead.get_event_data(10,11)
+    # stead_plotter.plot_all(stead_data[0])
 
     logger.info("Au revoir!")
