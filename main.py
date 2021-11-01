@@ -8,9 +8,7 @@ from core.stead_reader import SteadReader
 from core.len_plotter import LenPlotter
 from core.stead_plotter import SteadPlotter
 
-from core.models.model_001 import Model001
-from core.models.model_002 import Model002
-from core.models.model_003 import Model003
+import core.models.model_004
 
 logging.basicConfig(
     handlers=[logging.StreamHandler()],
