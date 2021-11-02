@@ -5,6 +5,7 @@ from keras import layers
 from core.stead_reader import SteadReader
 from scipy.signal import stft
 
+
 class Model003:
     x_train = None
     y_train = None
@@ -25,15 +26,14 @@ class Model003:
     def _build_spectrograms(self, x, y):
         x_train = []
         y_train = []
-        
+
         for idx, triplet in enumerate(x):
             for stream in triplet:
-                _, _, zxx = stft(stream, window='hanning', nperseg=155)
+                _, _, zxx = stft(stream, window="hanning", nperseg=155)
                 x_train.append(np.abs(zxx))
                 y_train.append(y[idx])
 
         return (x_train, y_train)
-
 
     def _define_model(self):
         pass

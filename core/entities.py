@@ -13,7 +13,7 @@ class SteadDataObject:
         # First column (E) becomes last row
         # Second column (N) becomes middle row
         # Third column (Z) becomes first row
-        rotated = np.rot90(self.data, k=1, axes=(0,1))
+        rotated = np.rot90(self.data, k=1, axes=(0, 1))
         if component.lower() == "e":
             return rotated[2]
         elif component.lower() == "n":
@@ -22,7 +22,7 @@ class SteadDataObject:
             return rotated[0]
 
     def get_components(self):
-        rotated = np.rot90(self.data, k=1, axes=(0,1))
+        rotated = np.rot90(self.data, k=1, axes=(0, 1))
         return rotated
 
     def get_timespan(self):
@@ -44,6 +44,8 @@ class SteadDataObject:
     def get_ts_short(self):
         dt = self.get_ts_datetime()
         return dt.strftime("%Y-%m-%d %H:%M:%S")
+
+
 class LenDataObject:
     """Placeholder class for data object."""
 
@@ -92,7 +94,5 @@ class LenDataObject:
     def get_spectrograms(self):
         spectrograms = []
         for d in self.data:
-            spectrograms.append(
-                [spectrogram(d, fs=20)]
-            )
+            spectrograms.append([spectrogram(d, fs=20)])
         return spectrograms

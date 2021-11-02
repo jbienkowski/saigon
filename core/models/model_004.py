@@ -15,9 +15,9 @@ from scipy.signal import spectrogram, stft, istft
 
 
 class Model004:
-    MODEL_NAME = "GanPlayground"
+    MODEL_NAME = "GAN-EVENTS"
     BUFFER_SIZE = 60000
-    BATCH_SIZE = 256
+    BATCH_SIZE = 128
     EPOCHS = 50
     NOISE_DIM = 100
     NUM_EXAMPLES_TO_GENERATE = 16
@@ -118,7 +118,7 @@ class Model004:
 
         plt.suptitle(label, fontsize=14)
 
-    def plot_single_stream(self, do, label, fs=100, nperseg=150):
+    def plot_single_stream(self, do, label, fs=100, nperseg=150, filename=None):
         d0 = pd.DataFrame(data=do)
 
         fig = plt.figure(figsize=(16, 16), dpi=80)
@@ -148,6 +148,9 @@ class Model004:
         ax3.pcolormesh(t_sftt, f_sftt, np.abs(Zxx), shading="auto")
 
         plt.suptitle(label, fontsize=14)
+
+        if filename != None:
+            plt.savefig(filename)
 
     def plot_stft(self, stream, fs=100, nperseg=155):
         f, t, Zxx = stft(stream, window="hanning", fs=fs, nperseg=nperseg)
@@ -304,20 +307,20 @@ class Model004:
         display.clear_output(wait=True)
         self.generate_and_save_images(self.GENERATOR, self.EPOCHS, self.SEED)
 
-    def generate_and_save_images(model, epoch, test_input):
+    def generate_and_save_images(self, model, epoch, test_input):
         # Notice `training` is set to False.
         # This is so all layers run in inference mode (batchnorm).
         predictions = model(test_input, training=False)
 
-        fig = plt.figure(figsize=(4, 4))
-
         for i in range(predictions.shape[0]):
-            plt.subplot(4, 4, i + 1)
-            plt.plot(predictions[i, :, :, 0][:6000])
-            plt.axis("off")
-
-        plt.savefig("image_at_epoch_{:04d}.png".format(epoch))
-        plt.show()
+            inversed = istft(
+                predictions[i, :, :, 0][:6000], window="hanning", fs=100, nperseg=155
+            )
+            self.plot_single_stream(
+                inversed[1][:6000],
+                f"GAN Event (epoch {epoch})",
+                filename=f"image_at_epoch_{epoch}.png",
+            )
 
     def run(self):
         folder_name = f"{self.MODEL_NAME} at {strftime('%H:%M')}"
