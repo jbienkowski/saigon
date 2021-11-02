@@ -8,7 +8,7 @@ from core.stead_reader import SteadReader
 from core.len_plotter import LenPlotter
 from core.stead_plotter import SteadPlotter
 
-import core.models.model_004
+from core.models.model_004 import Model004
 
 logging.basicConfig(
     handlers=[logging.StreamHandler()],
@@ -27,12 +27,13 @@ if __name__ == "__main__":
     with open("./config.json", "r") as f:
         cfg = json.load(f)
 
-    # m3 = Model003(cfg)
+    m4 = Model004(cfg)
+    m4.run()
 
-    stead = SteadReader(cfg)
+    # stead = SteadReader(cfg)
     # stead_plotter = SteadPlotter()
 
-    stead.prepare_gan_data()
+    # stead.prepare_gan_data()
 
     # stead_data = stead.get_event_data(10,11)
     # stead_plotter.plot_all(stead_data[0])
