@@ -20,7 +20,7 @@ class Model004:
     BATCH_SIZE = 256
     EPOCHS = 50
     NOISE_DIM = 100
-    NUM_EXAMPLES_TO_GENERATE = 16
+    NUM_EXAMPLES_TO_GENERATE = 1
 
     def __init__(self, cfg):
         self._cfg = cfg
@@ -171,13 +171,25 @@ class Model004:
             #         return (x_train, y_train, evi_train, x_test, y_test, evi_test)
             return (x_train, evi_train, x_test, evi_test)
 
-    def build_stfts(self, x):
+    def build_stfts_single_components(self, x):
         x_train = []
 
-        for idx, triplet in enumerate(x):
+        for triplet in x:
             for stream in triplet:
                 _, _, zxx = stft(stream, window="hanning", nperseg=155)
                 x_train.append(np.abs(zxx))
+
+        return np.array(x_train)
+
+    def build_stfts_three_components(self, x):
+        x_train = []
+
+        for triplet in x:
+            inner = []
+            for stream in triplet:
+                _, _, zxx = stft(stream, window="hanning", nperseg=155)
+                inner.append(np.abs(zxx))
+            x_train.append(inner)
 
         return np.array(x_train)
 
@@ -215,7 +227,7 @@ class Model004:
 
         model.add(
             layers.Conv2DTranspose(
-                1,
+                3,
                 (10, 10),
                 strides=(1, 1),
                 padding="same",
@@ -230,7 +242,7 @@ class Model004:
         model = tf.keras.Sequential()
         model.add(
             layers.Conv2D(
-                64, (5, 5), strides=(2, 2), padding="same", input_shape=[78, 78, 1]
+                64, (5, 5), strides=(2, 2), padding="same", input_shape=[78, 78, 3]
             )
         )
         model.add(layers.LeakyReLU())
@@ -332,13 +344,13 @@ class Model004:
 
         # (x_1, y_1, evi_1, x_2, y_2, evi_2) = get_data("../data/STEAD-processed-gan.hdf5", 10000, 20000, 18000)
         (x_1, evi_1, x_2, evi_2) = self.get_data(
-            "data/STEAD-processed-gan.hdf5", 1000, 2000, 1800
+            self._cfg["stead_path_db_processed_gan"], 1000, 2000, 1800
         )
 
-        x_train = self.build_stfts(x_1)
+        x_train = self.build_stfts_three_components(x_1)
         # x_test = self.build_stfts(x_2)
 
-        x_train = x_train.reshape(x_train.shape[0], 78, 78, 1).astype("float32")
+        x_train = x_train.reshape(x_train.shape[0], 78, 78, 3).astype("float32")
         # x_test = x_test.reshape(x_test.shape[0], 78, 78, 1).astype("float32")
 
         train_dataset = (
