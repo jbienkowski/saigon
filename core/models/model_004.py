@@ -14,33 +14,102 @@ from time import strftime
 from scipy.signal import spectrogram, stft, istft
 
 
-class Model004:
-    MODEL_NAME = "GAN-EVENTS"
-    BUFFER_SIZE = 60000
-    BATCH_SIZE = 128
-    EPOCHS = 50
-    NOISE_DIM = 100
-    NUM_EXAMPLES_TO_GENERATE = 1
+class GAN(tf.keras.Model):
+    def __init__(self, discriminator, generator, latent_dim):
+        super(GAN, self).__init__()
+        self.discriminator = discriminator
+        self.generator = generator
+        self.latent_dim = latent_dim
 
-    def __init__(self, cfg):
-        self._cfg = cfg
-        self.GENERATOR = self.make_generator_model()
-        self.DISCRIMINATOR = self.make_discriminator_model()
-        # Function to calculate cross entropy loss
-        self.CROSS_ENTROPY = tf.keras.losses.BinaryCrossentropy(from_logits=True)
-        self.SEED = tf.random.normal([self.NUM_EXAMPLES_TO_GENERATE, self.NOISE_DIM])
-        self.GENERATOR_OPTIMIZER = tf.keras.optimizers.Adam(1e-4)
-        self.DISCRIMINATOR_OPTIMIZER = tf.keras.optimizers.Adam(1e-4)
+    def compile(self, d_optimizer, g_optimizer, loss_fn):
+        super(GAN, self).compile()
+        self.d_optimizer = d_optimizer
+        self.g_optimizer = g_optimizer
+        self.loss_fn = loss_fn
+        self.d_loss_metric = tf.keras.metrics.Mean(name="d_loss")
+        self.g_loss_metric = tf.keras.metrics.Mean(name="g_loss")
 
-        self.CHECKPOINT_DIR = "./training_checkpoints"
-        self.CHECKPOINT_PREFIX = os.path.join(self.CHECKPOINT_DIR, "ckpt")
-        self.CHECKPOINT = tf.train.Checkpoint(
-            generator_optimizer=self.GENERATOR_OPTIMIZER,
-            discriminator_optimizer=self.DISCRIMINATOR_OPTIMIZER,
-            generator=self.GENERATOR,
-            discriminator=self.DISCRIMINATOR,
+    @property
+    def metrics(self):
+        return [self.d_loss_metric, self.g_loss_metric]
+
+    def train_step(self, real_images):
+        # Sample random points in the latent space
+        batch_size = tf.shape(real_images)[0]
+        random_latent_vectors = tf.random.normal(shape=(batch_size, self.latent_dim))
+
+        # Decode them to fake images
+        generated_images = self.generator(random_latent_vectors)
+
+        # Combine them with real images
+        combined_images = tf.concat([generated_images, real_images], axis=0)
+
+        # Assemble labels discriminating real from fake images
+        labels = tf.concat(
+            [tf.ones((batch_size, 1)), tf.zeros((batch_size, 1))], axis=0
+        )
+        # Add random noise to the labels - important trick!
+        labels += 0.05 * tf.random.uniform(tf.shape(labels))
+
+        # Train the discriminator
+        with tf.GradientTape() as tape:
+            predictions = self.discriminator(combined_images)
+            d_loss = self.loss_fn(labels, predictions)
+        grads = tape.gradient(d_loss, self.discriminator.trainable_weights)
+        self.d_optimizer.apply_gradients(
+            zip(grads, self.discriminator.trainable_weights)
         )
 
+        # Sample random points in the latent space
+        random_latent_vectors = tf.random.normal(shape=(batch_size, self.latent_dim))
+
+        # Assemble labels that say "all real images"
+        misleading_labels = tf.zeros((batch_size, 1))
+
+        # Train the generator (note that we should *not* update the weights
+        # of the discriminator)!
+        with tf.GradientTape() as tape:
+            predictions = self.discriminator(self.generator(random_latent_vectors))
+            g_loss = self.loss_fn(misleading_labels, predictions)
+        grads = tape.gradient(g_loss, self.generator.trainable_weights)
+        self.g_optimizer.apply_gradients(zip(grads, self.generator.trainable_weights))
+
+        # Update metrics
+        self.d_loss_metric.update_state(d_loss)
+        self.g_loss_metric.update_state(g_loss)
+        return {
+            "d_loss": self.d_loss_metric.result(),
+            "g_loss": self.g_loss_metric.result(),
+        }
+
+
+class GANMonitor(tf.keras.callbacks.Callback):
+    def __init__(self, num_img=3, latent_dim=128):
+        self.num_img = num_img
+        self.latent_dim = latent_dim
+        self.gp = GANPlotter()
+
+    def on_epoch_end(self, epoch, logs=None):
+        random_latent_vectors = tf.random.normal(shape=(self.num_img, self.latent_dim))
+        generated = self.model.generator(random_latent_vectors)
+        for i in range(generated.shape[0]):
+            inversed_z = istft(
+                generated[i, :, :, 0][:6000], window="hanning", fs=100, nperseg=155
+            )
+            inversed_n = istft(
+                generated[i, :, :, 1][:6000], window="hanning", fs=100, nperseg=155
+            )
+            inversed_e = istft(
+                generated[i, :, :, 2][:6000], window="hanning", fs=100, nperseg=155
+            )
+            self.gp.plot_all(
+                [inversed_z[1][:6000], inversed_n[1][:6000], inversed_e[1][:6000]],
+                f"GAN Event (epoch {epoch})",
+                file_path=f"image_at_epoch_{epoch}.png",
+            )
+
+
+class GANPlotter:
     def plot_all(self, do, label, fs=100, nperseg=150, file_path=None):
         d0 = pd.DataFrame(data=do[0])
         d1 = pd.DataFrame(data=do[1])
@@ -160,6 +229,39 @@ class Model004:
         # plt.specgram(x_1[0][0], cmap='plasma', Fs=100)
         plt.pcolormesh(t, f, np.abs(Zxx), shading="auto")
 
+
+class Model004:
+    MODEL_NAME = "GAN-EVENTS"
+    BUFFER_SIZE = 6
+    BATCH_SIZE = 3
+    EPOCHS = 100
+    NOISE_DIM = 100
+    NUM_EXAMPLES_TO_GENERATE = 1
+    FOLDER_NAME = f"{MODEL_NAME} at {strftime('%H:%M')}"
+    LOG_DIR = os.path.join("log/", FOLDER_NAME)
+
+    def __init__(self, cfg):
+        self._cfg = cfg
+        self.GENERATOR = self.make_generator_model()
+        self.DISCRIMINATOR = self.make_discriminator_model()
+        # Function to calculate cross entropy loss
+        self.CROSS_ENTROPY = tf.keras.losses.BinaryCrossentropy(from_logits=True)
+        self.SEED = tf.random.normal([self.NUM_EXAMPLES_TO_GENERATE, self.NOISE_DIM])
+        self.GENERATOR_OPTIMIZER = tf.keras.optimizers.Adam(1e-4)
+        self.DISCRIMINATOR_OPTIMIZER = tf.keras.optimizers.Adam(1e-4)
+
+        self.CHECKPOINT_DIR = "./training_checkpoints"
+        self.CHECKPOINT_PREFIX = os.path.join(self.CHECKPOINT_DIR, "ckpt")
+        self.CHECKPOINT = tf.train.Checkpoint(
+            generator_optimizer=self.GENERATOR_OPTIMIZER,
+            discriminator_optimizer=self.DISCRIMINATOR_OPTIMIZER,
+            generator=self.GENERATOR,
+            discriminator=self.DISCRIMINATOR,
+        )
+
+        self.CALLBACK = tf.keras.callbacks.TensorBoard(self.LOG_DIR)
+        self.CALLBACK.set_model(self.GENERATOR)
+
     def get_data(self, file_path, idx_start, idx_end, idx_slice):
         x_train = None
         #     y_train = None
@@ -275,7 +377,7 @@ class Model004:
     # Notice the use of `tf.function`
     # This annotation causes the function to be "compiled".
     # @tf.function
-    def train_step(self, images):
+    def train_step(self, epoch, images):
         noise = tf.random.normal([self.BATCH_SIZE, self.NOISE_DIM])
 
         with tf.GradientTape() as gen_tape, tf.GradientTape() as disc_tape:
@@ -306,7 +408,7 @@ class Model004:
             start = time.time()
 
             for image_batch in dataset:
-                self.train_step(image_batch)
+                self.train_step(epoch, image_batch)
 
             # Produce images for the GIF as you go
             display.clear_output(wait=True)
@@ -344,11 +446,8 @@ class Model004:
             )
 
     def run(self):
-        folder_name = f"{self.MODEL_NAME} at {strftime('%H:%M')}"
-        log_dir = os.path.join("log/", folder_name)
-
         try:
-            os.makedirs(log_dir)
+            os.makedirs(self.LOG_DIR)
         except OSError as exception:
             print(exception.strerror)
         else:
@@ -356,7 +455,7 @@ class Model004:
 
         # (x_1, y_1, evi_1, x_2, y_2, evi_2) = get_data("../data/STEAD-processed-gan.hdf5", 10000, 20000, 18000)
         (x_1, evi_1, x_2, evi_2) = self.get_data(
-            self._cfg["stead_path_db_processed_gan"], 1000, 2000, 1800
+            self._cfg["stead_path_db_processed_gan"], 10, 10, 18
         )
 
         x_train = self.build_stfts_three_components(x_1)
@@ -371,4 +470,29 @@ class Model004:
             .batch(self.BATCH_SIZE)
         )
 
-        self.train(train_dataset)
+        # self.train(train_dataset)
+
+        gan = GAN(
+            discriminator=self.DISCRIMINATOR,
+            generator=self.GENERATOR,
+            latent_dim=self.NOISE_DIM,
+        )
+        
+        gan.compile(
+            d_optimizer=tf.keras.optimizers.Adam(learning_rate=0.0001),
+            g_optimizer=tf.keras.optimizers.Adam(learning_rate=0.0001),
+            loss_fn=tf.keras.losses.BinaryCrossentropy(),
+        )
+
+        tensorboard_callback = tf.keras.callbacks.TensorBoard(
+            log_dir=self.LOG_DIR, histogram_freq=1
+        )
+
+        gan.fit(
+            train_dataset,
+            epochs=self.EPOCHS,
+            callbacks=[
+                tensorboard_callback,
+                GANMonitor(num_img=1, latent_dim=self.NOISE_DIM),
+            ],
+        )
