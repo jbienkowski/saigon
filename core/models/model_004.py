@@ -232,8 +232,8 @@ class GANPlotter:
 
 class Model004:
     MODEL_NAME = "GAN-EVENTS"
-    BUFFER_SIZE = 6
-    BATCH_SIZE = 3
+    BUFFER_SIZE = 1000
+    BATCH_SIZE = 32
     EPOCHS = 100
     NOISE_DIM = 100
     NUM_EXAMPLES_TO_GENERATE = 1
@@ -455,7 +455,7 @@ class Model004:
 
         # (x_1, y_1, evi_1, x_2, y_2, evi_2) = get_data("../data/STEAD-processed-gan.hdf5", 10000, 20000, 18000)
         (x_1, evi_1, x_2, evi_2) = self.get_data(
-            self._cfg["stead_path_db_processed_gan"], 10, 10, 18
+            self._cfg["stead_path_db_processed_gan"], 0, 10000, 8000
         )
 
         x_train = self.build_stfts_three_components(x_1)
@@ -477,7 +477,6 @@ class Model004:
             generator=self.GENERATOR,
             latent_dim=self.NOISE_DIM,
         )
-        
         gan.compile(
             d_optimizer=tf.keras.optimizers.Adam(learning_rate=0.0001),
             g_optimizer=tf.keras.optimizers.Adam(learning_rate=0.0001),
