@@ -41,7 +41,7 @@ class Model004:
             discriminator=self.DISCRIMINATOR,
         )
 
-    def plot_all(self, do, label, fs=100, nperseg=150):
+    def plot_all(self, do, label, fs=100, nperseg=150, file_path=None):
         d0 = pd.DataFrame(data=do[0])
         d1 = pd.DataFrame(data=do[1])
         d2 = pd.DataFrame(data=do[2])
@@ -118,7 +118,10 @@ class Model004:
 
         plt.suptitle(label, fontsize=14)
 
-    def plot_single_stream(self, do, label, fs=100, nperseg=150, filename=None):
+        if file_path != None:
+            plt.savefig(file_path)
+
+    def plot_single_stream(self, do, label, fs=100, nperseg=150, file_path=None):
         d0 = pd.DataFrame(data=do)
 
         fig = plt.figure(figsize=(16, 16), dpi=80)
@@ -149,8 +152,8 @@ class Model004:
 
         plt.suptitle(label, fontsize=14)
 
-        if filename != None:
-            plt.savefig(filename)
+        if file_path != None:
+            plt.savefig(file_path)
 
     def plot_stft(self, stream, fs=100, nperseg=155):
         f, t, Zxx = stft(stream, window="hanning", fs=fs, nperseg=nperseg)
@@ -325,13 +328,19 @@ class Model004:
         predictions = model(test_input, training=False)
 
         for i in range(predictions.shape[0]):
-            inversed = istft(
+            inversed_z = istft(
                 predictions[i, :, :, 0][:6000], window="hanning", fs=100, nperseg=155
             )
-            self.plot_single_stream(
-                inversed[1][:6000],
+            inversed_n = istft(
+                predictions[i, :, :, 1][:6000], window="hanning", fs=100, nperseg=155
+            )
+            inversed_e = istft(
+                predictions[i, :, :, 2][:6000], window="hanning", fs=100, nperseg=155
+            )
+            self.plot_all(
+                [inversed_z[1][:6000], inversed_n[1][:6000], inversed_e[1][:6000]],
                 f"GAN Event (epoch {epoch})",
-                filename=f"image_at_epoch_{epoch}.png",
+                file_path=f"image_at_epoch_{epoch}.png",
             )
 
     def run(self):
