@@ -93,20 +93,28 @@ class GANMonitor(tf.keras.callbacks.Callback):
         random_latent_vectors = tf.random.normal(shape=(self.num_img, self.latent_dim))
         generated = self.model.generator(random_latent_vectors)
         for i in range(generated.shape[0]):
-            inversed_z = istft(
+            inversed = istft(
                 generated[i, :, :, 0][:6000], window="hanning", fs=100, nperseg=155
             )
-            inversed_n = istft(
-                generated[i, :, :, 1][:6000], window="hanning", fs=100, nperseg=155
-            )
-            inversed_e = istft(
-                generated[i, :, :, 2][:6000], window="hanning", fs=100, nperseg=155
-            )
-            self.gp.plot_all(
-                [inversed_z[1][:6000], inversed_n[1][:6000], inversed_e[1][:6000]],
+            self.gp.plot_single_stream(
+                inversed[1][:6000],
                 f"GAN Event (epoch {epoch})",
-                file_path=f"image_at_epoch_{epoch}.png",
+                file_path=f"image_at_epoch_{epoch}.png"
             )
+            # inversed_z = istft(
+            #     generated[i, :, :, 0][:6000], window="hanning", fs=100, nperseg=155
+            # )
+            # inversed_n = istft(
+            #     generated[i, :, :, 1][:6000], window="hanning", fs=100, nperseg=155
+            # )
+            # inversed_e = istft(
+            #     generated[i, :, :, 2][:6000], window="hanning", fs=100, nperseg=155
+            # )
+            # self.gp.plot_all(
+            #     [inversed_z[1][:6000], inversed_n[1][:6000], inversed_e[1][:6000]],
+            #     f"GAN Event (epoch {epoch})",
+            #     file_path=f"image_at_epoch_{epoch}.png",
+            # )
 
 
 class GANPlotter:
@@ -235,13 +243,14 @@ class Model004:
     BUFFER_SIZE = 1000
     BATCH_SIZE = 32
     EPOCHS = 100
-    NOISE_DIM = 100
+    NOISE_DIM = 156
     NUM_EXAMPLES_TO_GENERATE = 1
     FOLDER_NAME = f"{MODEL_NAME} at {strftime('%H:%M')}"
     LOG_DIR = os.path.join("log/", FOLDER_NAME)
 
     def __init__(self, cfg):
         self._cfg = cfg
+        self.gp = GANPlotter()
         self.GENERATOR = self.make_generator_model()
         self.DISCRIMINATOR = self.make_discriminator_model()
         # Function to calculate cross entropy loss
@@ -260,7 +269,6 @@ class Model004:
         )
 
         self.CALLBACK = tf.keras.callbacks.TensorBoard(self.LOG_DIR)
-        self.CALLBACK.set_model(self.GENERATOR)
 
     def get_data(self, file_path, idx_start, idx_end, idx_slice):
         x_train = None
@@ -303,7 +311,7 @@ class Model004:
 
     def make_generator_model(self):
         model = tf.keras.Sequential()
-        model.add(layers.Dense(3 * 3 * 1024, use_bias=False, input_shape=(100,)))
+        model.add(layers.Dense(3 * 3 * 1024, use_bias=False, input_shape=(self.NOISE_DIM,)))
         model.add(layers.BatchNormalization())
         model.add(layers.LeakyReLU())
 
@@ -311,7 +319,7 @@ class Model004:
 
         model.add(
             layers.Conv2DTranspose(
-                512, (10, 10), strides=(1, 1), padding="same", use_bias=False
+                64, (10, 10), strides=(1, 1), padding="same", use_bias=False
             )
         )
         model.add(layers.BatchNormalization())
@@ -335,7 +343,7 @@ class Model004:
 
         model.add(
             layers.Conv2DTranspose(
-                3,
+                1,
                 (10, 10),
                 strides=(1, 1),
                 padding="same",
@@ -350,7 +358,7 @@ class Model004:
         model = tf.keras.Sequential()
         model.add(
             layers.Conv2D(
-                64, (5, 5), strides=(2, 2), padding="same", input_shape=[78, 78, 3]
+                64, (5, 5), strides=(2, 2), padding="same", input_shape=[78, 78, 1]
             )
         )
         model.add(layers.LeakyReLU())
@@ -430,20 +438,28 @@ class Model004:
         predictions = model(test_input, training=False)
 
         for i in range(predictions.shape[0]):
-            inversed_z = istft(
+            inversed = istft(
                 predictions[i, :, :, 0][:6000], window="hanning", fs=100, nperseg=155
             )
-            inversed_n = istft(
-                predictions[i, :, :, 1][:6000], window="hanning", fs=100, nperseg=155
-            )
-            inversed_e = istft(
-                predictions[i, :, :, 2][:6000], window="hanning", fs=100, nperseg=155
-            )
-            self.plot_all(
-                [inversed_z[1][:6000], inversed_n[1][:6000], inversed_e[1][:6000]],
+            self.gp.plot_single_stream(
+                inversed[1][:6000],
                 f"GAN Event (epoch {epoch})",
-                file_path=f"image_at_epoch_{epoch}.png",
+                file_path=f"image_at_epoch_{epoch}.png"
             )
+            # inversed_z = istft(
+            #     predictions[i, :, :, 0][:6000], window="hanning", fs=100, nperseg=155
+            # )
+            # inversed_n = istft(
+            #     predictions[i, :, :, 1][:6000], window="hanning", fs=100, nperseg=155
+            # )
+            # inversed_e = istft(
+            #     predictions[i, :, :, 2][:6000], window="hanning", fs=100, nperseg=155
+            # )
+            # self._plt.plot_all(
+            #     [inversed_z[1][:6000], inversed_n[1][:6000], inversed_e[1][:6000]],
+            #     f"GAN Event (epoch {epoch})",
+            #     file_path=f"image_at_epoch_{epoch}.png",
+            # )
 
     def run(self):
         try:
@@ -458,10 +474,10 @@ class Model004:
             self._cfg["stead_path_db_processed_gan"], 0, 10000, 8000
         )
 
-        x_train = self.build_stfts_three_components(x_1)
-        # x_test = self.build_stfts(x_2)
+        # x_train = self.build_stfts_three_components(x_1)
+        x_train = self.build_stfts_single_components(x_1)
 
-        x_train = x_train.reshape(x_train.shape[0], 78, 78, 3).astype("float32")
+        x_train = x_train.reshape(x_train.shape[0], 78, 78, 1).astype("float32")
         # x_test = x_test.reshape(x_test.shape[0], 78, 78, 1).astype("float32")
 
         train_dataset = (
@@ -470,28 +486,30 @@ class Model004:
             .batch(self.BATCH_SIZE)
         )
 
-        # self.train(train_dataset)
+        self.train(train_dataset)
 
-        gan = GAN(
-            discriminator=self.DISCRIMINATOR,
-            generator=self.GENERATOR,
-            latent_dim=self.NOISE_DIM,
-        )
-        gan.compile(
-            d_optimizer=tf.keras.optimizers.Adam(learning_rate=0.0001),
-            g_optimizer=tf.keras.optimizers.Adam(learning_rate=0.0001),
-            loss_fn=tf.keras.losses.BinaryCrossentropy(),
-        )
+        # gan = GAN(
+        #     discriminator=self.DISCRIMINATOR,
+        #     generator=self.GENERATOR,
+        #     latent_dim=self.NOISE_DIM,
+        # )
+        # gan.compile(
+        #     d_optimizer=tf.keras.optimizers.Adam(learning_rate=0.001),
+        #     g_optimizer=tf.keras.optimizers.Adam(learning_rate=0.001),
+        #     loss_fn=tf.keras.losses.BinaryCrossentropy(),
+        # )
 
-        tensorboard_callback = tf.keras.callbacks.TensorBoard(
-            log_dir=self.LOG_DIR, histogram_freq=1
-        )
+        # self.CALLBACK.set_model(gan)
 
-        gan.fit(
-            train_dataset,
-            epochs=self.EPOCHS,
-            callbacks=[
-                tensorboard_callback,
-                GANMonitor(num_img=1, latent_dim=self.NOISE_DIM),
-            ],
-        )
+        # tensorboard_callback = tf.keras.callbacks.TensorBoard(
+        #     log_dir=self.LOG_DIR, histogram_freq=1
+        # )
+
+        # gan.fit(
+        #     train_dataset,
+        #     epochs=self.EPOCHS,
+        #     callbacks=[
+        #         tensorboard_callback,
+        #         GANMonitor(num_img=1, latent_dim=self.NOISE_DIM),
+        #     ],
+        # )
