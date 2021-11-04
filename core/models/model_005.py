@@ -36,7 +36,8 @@ class GAN(tf.keras.Model):
         return [self.d_loss_metric, self.g_loss_metric]
 
     def train_step(self, real_images):
-        noise = tf.random.normal([self.batch_size, self.latent_dim], stddev=10e3)
+        # noise = tf.random.normal([self.batch_size, self.latent_dim])
+        noise = tf.random.normal([self.batch_size, 3, 100])
 
         with tf.GradientTape() as gen_tape, tf.GradientTape() as disc_tape:
             generated_images = self.generator(noise, training=True)
@@ -120,31 +121,14 @@ class GANMonitor(tf.keras.callbacks.Callback):
         self.gp = GANPlotter()
 
     def on_epoch_end(self, epoch, logs=None):
-        random_latent_vectors = tf.random.normal(shape=(self.num_img, self.latent_dim), stddev=10e3)
+        random_latent_vectors = tf.random.normal(shape=(self.num_img, 3, 6000))
         generated = self.model.generator(random_latent_vectors)
         for i in range(generated.shape[0]):
-            inversed = istft(
-                generated[i, :, :, 0][:6000], window="hanning", fs=100, nperseg=155
-            )
-            self.gp.plot_single_stream(
-                inversed[1][:6000],
+            self.gp.plot_all(
+                [generated[0, :, :, 0][0], generated[0, :, :, 0][1], generated[0, :, :, 0][2]],
                 f"GAN Event (epoch {epoch})",
-                file_path=f"out/image_at_epoch_{epoch}.png"
+                file_path=f"image_at_epoch_{epoch}.png",
             )
-            # inversed_z = istft(
-            #     generated[i, :, :, 0][:6000], window="hanning", fs=100, nperseg=155
-            # )
-            # inversed_n = istft(
-            #     generated[i, :, :, 1][:6000], window="hanning", fs=100, nperseg=155
-            # )
-            # inversed_e = istft(
-            #     generated[i, :, :, 2][:6000], window="hanning", fs=100, nperseg=155
-            # )
-            # self.gp.plot_all(
-            #     [inversed_z[1][:6000], inversed_n[1][:6000], inversed_e[1][:6000]],
-            #     f"GAN Event (epoch {epoch})",
-            #     file_path=f"image_at_epoch_{epoch}.png",
-            # )
 
 
 class GANPlotter:
@@ -268,12 +252,12 @@ class GANPlotter:
         plt.pcolormesh(t, f, np.abs(Zxx), shading="auto")
 
 
-class Model004:
+class Model005:
     MODEL_NAME = "GAN-EVENTS"
     BUFFER_SIZE = 1000
-    BATCH_SIZE = 32
-    EPOCHS = 25
-    NOISE_DIM = 156
+    BATCH_SIZE = 16
+    EPOCHS = 10
+    NOISE_DIM = 100
     NUM_EXAMPLES_TO_GENERATE = 1
     FOLDER_NAME = f"{MODEL_NAME} at {strftime('%H:%M')}"
     LOG_DIR = os.path.join("log/", FOLDER_NAME)
@@ -289,7 +273,7 @@ class Model004:
         self.GENERATOR_OPTIMIZER = tf.keras.optimizers.Adam(1e-4)
         self.DISCRIMINATOR_OPTIMIZER = tf.keras.optimizers.Adam(1e-4)
 
-        self.CHECKPOINT_DIR = "./out/training_checkpoints"
+        self.CHECKPOINT_DIR = "./training_checkpoints"
         self.CHECKPOINT_PREFIX = os.path.join(self.CHECKPOINT_DIR, "ckpt")
         self.CHECKPOINT = tf.train.Checkpoint(
             generator_optimizer=self.GENERATOR_OPTIMIZER,
@@ -341,46 +325,29 @@ class Model004:
 
     def make_generator_model(self):
         model = tf.keras.Sequential()
-        model.add(layers.Dense(3 * 3 * 1024, use_bias=False, input_shape=(self.NOISE_DIM,)))
+        model.add(layers.Dense(5*25, use_bias=False, input_shape=(3, 100,)))
         model.add(layers.BatchNormalization())
         model.add(layers.LeakyReLU())
 
-        model.add(layers.Reshape((3, 3, 1024)))
+        model.add(layers.Reshape((3, 125, 1)))
 
-        model.add(
-            layers.Conv2DTranspose(
-                64, (10, 10), strides=(1, 1), padding="same", use_bias=False
-            )
-        )
+        model.add(layers.Conv2DTranspose(1, (10, 10), strides=(1, 3), padding='same', use_bias=False))
         model.add(layers.BatchNormalization())
         model.add(layers.LeakyReLU())
 
-        model.add(
-            layers.Conv2DTranspose(
-                128, (10, 10), strides=(2, 2), padding="same", use_bias=False
-            )
-        )
+        model.add(layers.Conv2DTranspose(256, (10, 10), strides=(1, 2), padding='same', use_bias=False))
+        model.add(layers.BatchNormalization())
+        model.add(layers.LeakyReLU())
+        
+        model.add(layers.Conv2DTranspose(256, (10, 10), strides=(1, 2), padding='same', use_bias=False))
+        model.add(layers.BatchNormalization())
+        model.add(layers.LeakyReLU())
+        
+        model.add(layers.Conv2DTranspose(256, (10, 10), strides=(1, 2), padding='same', use_bias=False))
         model.add(layers.BatchNormalization())
         model.add(layers.LeakyReLU())
 
-        model.add(
-            layers.Conv2DTranspose(
-                64, (10, 10), strides=(13, 13), padding="same", use_bias=False
-            )
-        )
-        model.add(layers.BatchNormalization())
-        model.add(layers.LeakyReLU())
-
-        model.add(
-            layers.Conv2DTranspose(
-                1,
-                (10, 10),
-                strides=(1, 1),
-                padding="same",
-                use_bias=False,
-                activation="tanh",
-            )
-        )
+        model.add(layers.Conv2DTranspose(1, (10, 10), strides=(1, 2), padding='same', use_bias=False, activation='tanh'))
 
         return model
 
@@ -388,7 +355,7 @@ class Model004:
         model = tf.keras.Sequential()
         model.add(
             layers.Conv2D(
-                64, (5, 5), strides=(2, 2), padding="same", input_shape=[78, 78, 1]
+                64, (5, 5), strides=(2, 2), padding="same", input_shape=[3, 6000, 1]
             )
         )
         model.add(layers.LeakyReLU())
@@ -396,21 +363,7 @@ class Model004:
 
         model.add(layers.Conv2D(128, (5, 5), strides=(2, 2), padding="same"))
         model.add(layers.LeakyReLU())
-        model.add(layers.Dropout(0.1))
-
-        model.add(layers.LeakyReLU())
-        model.add(layers.Dropout(0.1))
-
-        model.add(layers.Conv2D(64, (5, 5), strides=(2, 2), padding="same"))
-        model.add(layers.LeakyReLU())
-        model.add(layers.Dropout(0.1))
-
-        model.add(layers.LeakyReLU())
-        model.add(layers.Dropout(0.1))
-
-        model.add(layers.Conv2D(32, (5, 5), strides=(2, 2), padding="same"))
-        model.add(layers.LeakyReLU())
-        model.add(layers.Dropout(0.1))
+        model.add(layers.Dropout(0.3))
 
         model.add(layers.Flatten())
         model.add(layers.Dense(1))
@@ -519,14 +472,13 @@ class Model004:
         )
 
         # x_train = self.build_stfts_three_components(x_1)
-        x_train = self.build_stfts_single_components(x_1)
+        # x_train = self.build_stfts_single_components(x_1)
 
-        x_train = x_train.reshape(x_train.shape[0], 78, 78, 1).astype("float32")
+        x_train = x_1.reshape(x_1.shape[0], 3, 6000, 1).astype("float32")
         # x_test = x_test.reshape(x_test.shape[0], 78, 78, 1).astype("float32")
 
         train_dataset = (
             tf.data.Dataset.from_tensor_slices(x_train)
-            .shuffle(self.BUFFER_SIZE)
             .batch(self.BATCH_SIZE)
         )
 
@@ -539,8 +491,8 @@ class Model004:
             batch_size=self.BATCH_SIZE
         )
         gan.compile(
-            d_optimizer=tf.keras.optimizers.Adam(learning_rate=0.0001),
-            g_optimizer=tf.keras.optimizers.Adam(learning_rate=0.0001),
+            d_optimizer=tf.keras.optimizers.Adam(learning_rate=0.001),
+            g_optimizer=tf.keras.optimizers.Adam(learning_rate=0.001),
             loss_fn=tf.keras.losses.BinaryCrossentropy(),
         )
 
