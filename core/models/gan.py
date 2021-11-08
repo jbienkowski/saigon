@@ -82,7 +82,7 @@ class GAN(tf.keras.Model):
             zip(gradients_of_discriminator, self.discriminator.trainable_variables)
         )
 
-        # # Update metrics
+        # Update metrics
         self.d_loss_metric.update_state(disc_loss)
         self.g_loss_metric.update_state(gen_loss)
         return {
