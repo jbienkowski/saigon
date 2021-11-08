@@ -3,6 +3,7 @@ import seaborn as sns
 import pandas as pd
 import numpy as np
 from .entities import SteadDataObject
+from scipy.signal import spectrogram, stft, istft
 
 
 class SteadPlotter:
@@ -120,3 +121,37 @@ class SteadPlotter:
         plt.suptitle(f"{type}: {do.net}.{do.sta} at {do.get_ts_short()}", fontsize=14)
 
         plt.savefig(f"out/{do.type}-{do.id}-spectrogram.png")
+
+    def plot_single_stream(self, do, label, fs=100, nperseg=155, file_path=None):
+        d0 = pd.DataFrame(data=do)
+
+        fig = plt.figure(figsize=(16, 16), dpi=80)
+        ax1 = plt.subplot2grid((4, 1), (0, 0))
+        ax2 = plt.subplot2grid((4, 1), (1, 0))
+        ax3 = plt.subplot2grid((4, 1), (2, 0), rowspan=2)
+
+        plt.subplots_adjust(hspace=0.5)
+
+        sns.lineplot(data=do, ax=ax1, linewidth=1, legend=None)
+
+        ax1.set_title("Waveform")
+        ax1.set(xlabel="Samples", ylabel="Amplitude counts")
+        ax1.locator_params(nbins=6, axis="y")
+
+        f, t, Sxx = spectrogram(x=do, fs=fs)
+
+        ax2.clear()
+        ax2.set_title("Spectrogram")
+        ax2.pcolormesh(t, f, Sxx, shading="gouraud")
+        ax2.set(xlabel="Time [sec]", ylabel="Frequency [Hz]")
+
+        f_sftt, t_sftt, Zxx = stft(do, window="hanning", fs=fs, nperseg=nperseg)
+
+        ax3.clear()
+        ax3.set_title("STFT")
+        ax3.pcolormesh(t_sftt, f_sftt, np.abs(Zxx), shading="auto")
+
+        plt.suptitle(label, fontsize=14)
+
+        if file_path != None:
+            plt.savefig(file_path)
