@@ -85,6 +85,7 @@ class GANPlotter:
 
         if file_path != None:
             plt.savefig(file_path)
+        plt.close(fig)
 
     def plot_single_stream(self, do, label, fs=100, nperseg=155, file_path=None):
         d0 = pd.DataFrame(data=do)
@@ -119,6 +120,7 @@ class GANPlotter:
 
         if file_path != None:
             plt.savefig(file_path)
+        plt.close(fig)
 
     def plot_stft(self, stream, fs=100, nperseg=155):
         f, t, Zxx = stft(stream, window="hanning", fs=fs, nperseg=nperseg)

@@ -5,7 +5,7 @@ import random
 
 from .stead_plotter import SteadPlotter
 from .entities import SteadDataObject
-from scipy.signal import stft, istft
+from scipy.signal import stft, istft, resample
 
 COMP_MAP = ["Z", "N", "E"]
 COMP_QTY = 3
@@ -160,6 +160,45 @@ class SteadReader:
                 components = do.get_components()
                 for component_idx, c in enumerate(components):
                     _, _, Zxx = stft(c, window="hanning", fs=100, nperseg=155)
+                    f["keys"][COMP_QTY * event_idx + component_idx] = bytes(
+                        key, encoding="utf-8"
+                    )
+                    f["components"][COMP_QTY * event_idx + component_idx] = bytes(
+                        COMP_MAP[component_idx], encoding="utf-8"
+                    )
+                    f["data"][COMP_QTY * event_idx + component_idx] = Zxx.astype(
+                        np.float32
+                    )
+
+    def prepare_stft_data_64(self):
+        df = pd.read_csv(self._cfg["stead_path_csv"])
+
+        df_eq = df[
+            (df.trace_category == "earthquake_local")
+            & (df.source_distance_km <= 75)
+            & (df.source_magnitude > 1.5)
+        ]
+        eq_list = df_eq["trace_name"].to_list()[:200000]
+
+        len_events = len(eq_list)
+        # We have 3 streams per event
+        len_streams = len_events * 3
+
+        # Init the HDF5 file
+        with h5py.File(self._cfg["stead_path_db_processed_stft_64"], "a") as f:
+            f.create_dataset("keys", shape=(len_streams,), dtype="S50")
+            f.create_dataset("components", shape=(len_streams,), dtype="S1")
+            f.create_dataset("data", shape=(len_streams, 64, 64), dtype="float32")
+
+        for event_idx, key in enumerate(eq_list):
+            if event_idx % 100 == 0:
+                print(f"{event_idx}/{len_events}")
+            do = self.get_data_by_evi(key)
+            with h5py.File(self._cfg["stead_path_db_processed_stft_64"], "a") as f:
+                components = do.get_components()
+                for component_idx, c in enumerate(components):
+                    c_downsampled = resample(c, 4000)
+                    _, _, Zxx = stft(c_downsampled, window="hanning", fs=66, nperseg=127)
                     f["keys"][COMP_QTY * event_idx + component_idx] = bytes(
                         key, encoding="utf-8"
                     )

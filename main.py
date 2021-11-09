@@ -25,10 +25,12 @@ if __name__ == "__main__":
     m = GAN(cfg)
     m.run()
 
-    reader = SteadReader(cfg)
-    plotter = SteadPlotter()
+    # reader = SteadReader(cfg)
+    # plotter = SteadPlotter()
 
-    # stead_data = reader.get_event_data(10,11)
+    # reader.prepare_stft_data_64()
+
+    # stead_data = reader.get_event_data(10,20)
     # plotter.plot_all(stead_data[0])
 
     logger.info("Au revoir!")

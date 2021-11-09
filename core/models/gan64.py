@@ -14,7 +14,7 @@ class GAN(tf.keras.Model):
     BUFFER_SIZE = 1000
     BATCH_SIZE = 256
     EPOCHS = 100
-    LATENT_DIM = 100
+    LATENT_DIM = 512
     NUM_EXAMPLES_TO_GENERATE = 1
     FOLDER_NAME = f"{MODEL_NAME} at {strftime('%H:%M')}"
     LOG_DIR = os.path.join("log/", FOLDER_NAME)
@@ -100,38 +100,85 @@ class GAN(tf.keras.Model):
     def make_generator_model(self):
         model = tf.keras.Sequential()
         model.add(
-            layers.Dense(3 * 3 * 128, use_bias=False, input_shape=(self.LATENT_DIM,))
+            layers.Dense(2 * 2 * 128, use_bias=False, input_shape=(self.LATENT_DIM,))
         )
         model.add(layers.BatchNormalization())
         model.add(layers.LeakyReLU())
-        model.add(layers.Dropout(0.2))
 
-        model.add(layers.Reshape((3, 3, 128)))
+        model.add(layers.Reshape((2, 2, 128)))
 
-        model.add(layers.Conv2DTranspose(64, (10, 10), strides=(2, 2), padding="same", use_bias=False))
+        model.add(
+            layers.Conv2DTranspose(
+                64, (20, 20), strides=(2, 2), padding="same", use_bias=False
+            )
+        )
         model.add(layers.BatchNormalization())
         model.add(layers.LeakyReLU())
-        model.add(layers.Dropout(0.3))
+        model.add(layers.Dropout(0.1))
 
-        model.add(layers.Conv2DTranspose(64, (10, 10), strides=(13, 13), padding="same", use_bias=False))
+        model.add(
+            layers.Conv2DTranspose(
+                64, (20, 20), strides=(16, 16), padding="same", use_bias=False
+            )
+        )
         model.add(layers.BatchNormalization())
         model.add(layers.LeakyReLU())
-        model.add(layers.Dropout(0.3))
+        model.add(layers.Dropout(0.1))
 
-        model.add(layers.Conv2DTranspose(1, (10, 10), strides=(1, 1), padding="same", use_bias=False, activation="tanh"))
+        # model.add(
+        #     layers.Conv2DTranspose(
+        #         64, (20, 20), strides=(2, 2), padding="same", use_bias=False
+        #     )
+        # )
+        # model.add(layers.BatchNormalization())
+        # model.add(layers.LeakyReLU())
+        # model.add(layers.Dropout(0.1))
+
+        # model.add(
+        #     layers.Conv2DTranspose(
+        #         64, (20, 20), strides=(2, 2), padding="same", use_bias=False
+        #     )
+        # )
+        # model.add(layers.BatchNormalization())
+        # model.add(layers.LeakyReLU())
+        # model.add(layers.Dropout(0.1))
+
+        # model.add(
+        #     layers.Conv2DTranspose(
+        #         64, (20, 20), strides=(2, 2), padding="same", use_bias=False
+        #     )
+        # )
+        # model.add(layers.BatchNormalization())
+        # model.add(layers.LeakyReLU())
+        # model.add(layers.Dropout(0.1))
+
+        model.add(
+            layers.Conv2DTranspose(
+                1,
+                (1, 1),
+                strides=(1, 1),
+                padding="same",
+                use_bias=False,
+                activation="tanh",
+            )
+        )
 
         return model
 
     def make_discriminator_model(self):
         model = tf.keras.Sequential()
 
-        model.add(layers.Conv2D(156, (5, 5), strides=(2, 2), padding="same", input_shape=[78, 78, 1]))
+        model.add(
+            layers.Conv2D(
+                128, (5, 5), strides=(2, 2), padding="same", input_shape=[64, 64, 1]
+            )
+        )
         model.add(layers.LeakyReLU())
-        model.add(layers.Dropout(0.3))
+        model.add(layers.Dropout(0.2))
 
-        model.add(layers.Conv2D(312, (5, 5), strides=(2, 2), padding="same"))
+        model.add(layers.Conv2D(256, (5, 5), strides=(2, 2), padding="same"))
         model.add(layers.LeakyReLU())
-        model.add(layers.Dropout(0.3))
+        model.add(layers.Dropout(0.2))
 
         model.add(layers.Flatten())
         model.add(layers.Dense(1))
@@ -147,12 +194,12 @@ class GAN(tf.keras.Model):
             print("Successfully created dirs!")
 
         (keys, components, x_train) = self.get_stft_data(
-            self._cfg["stead_path_db_processed_stft"], 25000
+            self._cfg["stead_path_db_processed_stft_64"], 10000
         )
 
-        x_train = x_train.reshape(x_train.shape[0], 78, 78, 1)
-
         x_train /= 100
+
+        x_train = x_train.reshape(x_train.shape[0], 64, 64, 1)
 
         train_dataset = (
             tf.data.Dataset.from_tensor_slices(x_train)
@@ -196,10 +243,10 @@ class GANMonitor(tf.keras.callbacks.Callback):
 
         for i in range(generated.shape[0]):
             inversed = istft(
-                generated[i, :, :, 0][:6000] * 100, window="hanning", fs=100, nperseg=155
+                generated[i, :, :, 0][:4000] * 100, window="hanning", fs=66, nperseg=127
             )
             self.gp.plot_single_stream(
-                inversed[1][:6000],
+                inversed[1][:4000],
                 f"GAN Event (epoch {epoch})",
                 file_path=f"out/image_at_epoch_{epoch}.png",
             )
