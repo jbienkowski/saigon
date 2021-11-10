@@ -8,6 +8,7 @@ from scipy.signal import istft
 
 from core.gan_plotter import GANPlotter
 
+SCALING_FACTOR = 0
 
 class GAN(tf.keras.Model):
     MODEL_NAME = "GAN-EVENTS"
@@ -108,24 +109,45 @@ class GAN(tf.keras.Model):
 
         model.add(layers.Reshape((3, 3, 128)))
 
-        model.add(layers.Conv2DTranspose(64, (10, 10), strides=(2, 2), padding="same", use_bias=False))
+        model.add(
+            layers.Conv2DTranspose(
+                64, (10, 10), strides=(2, 2), padding="same", use_bias=False
+            )
+        )
         model.add(layers.BatchNormalization())
         model.add(layers.LeakyReLU())
         model.add(layers.Dropout(0.3))
 
-        model.add(layers.Conv2DTranspose(64, (10, 10), strides=(13, 13), padding="same", use_bias=False))
+        model.add(
+            layers.Conv2DTranspose(
+                64, (10, 10), strides=(13, 13), padding="same", use_bias=False
+            )
+        )
         model.add(layers.BatchNormalization())
         model.add(layers.LeakyReLU())
         model.add(layers.Dropout(0.3))
 
-        model.add(layers.Conv2DTranspose(1, (10, 10), strides=(1, 1), padding="same", use_bias=False, activation="tanh"))
+        model.add(
+            layers.Conv2DTranspose(
+                1,
+                (10, 10),
+                strides=(1, 1),
+                padding="same",
+                use_bias=False,
+                activation="tanh",
+            )
+        )
 
         return model
 
     def make_discriminator_model(self):
         model = tf.keras.Sequential()
 
-        model.add(layers.Conv2D(156, (5, 5), strides=(2, 2), padding="same", input_shape=[78, 78, 1]))
+        model.add(
+            layers.Conv2D(
+                156, (5, 5), strides=(2, 2), padding="same", input_shape=[78, 78, 1]
+            )
+        )
         model.add(layers.LeakyReLU())
         model.add(layers.Dropout(0.3))
 
@@ -152,7 +174,19 @@ class GAN(tf.keras.Model):
 
         x_train = x_train.reshape(x_train.shape[0], 78, 78, 1)
 
-        x_train /= 100
+        # Determine the scaling factor based on dataset
+        global SCALING_FACTOR
+        if SCALING_FACTOR == 0:
+            SCALING_FACTOR = int(
+                max(
+                    [
+                        abs(min([x.min() for x in x_train])),
+                        abs(max([x.max() for x in x_train])),
+                    ]
+                )
+            )
+
+        x_train /= SCALING_FACTOR
 
         train_dataset = (
             tf.data.Dataset.from_tensor_slices(x_train)
@@ -196,7 +230,10 @@ class GANMonitor(tf.keras.callbacks.Callback):
 
         for i in range(generated.shape[0]):
             inversed = istft(
-                generated[i, :, :, 0][:6000] * 100, window="hanning", fs=100, nperseg=155
+                generated[i, :, :, 0][:6000] * SCALING_FACTOR,
+                window="hanning",
+                fs=100,
+                nperseg=155,
             )
             self.gp.plot_single_stream(
                 inversed[1][:6000],

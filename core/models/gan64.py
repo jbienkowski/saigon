@@ -8,6 +8,8 @@ from scipy.signal import istft
 
 from core.gan_plotter import GANPlotter
 
+SCALING_FACTOR = 0
+
 
 class GAN(tf.keras.Model):
     MODEL_NAME = "GAN-EVENTS"
@@ -197,7 +199,19 @@ class GAN(tf.keras.Model):
             self._cfg["stead_path_db_processed_stft_64"], 10000
         )
 
-        x_train /= 100
+        # Determine the scaling factor based on dataset
+        global SCALING_FACTOR
+        if SCALING_FACTOR == 0:
+            SCALING_FACTOR = int(
+                max(
+                    [
+                        abs(min([x.min() for x in x_train])),
+                        abs(max([x.max() for x in x_train])),
+                    ]
+                )
+            )
+
+        x_train /= SCALING_FACTOR
 
         x_train = x_train.reshape(x_train.shape[0], 64, 64, 1)
 
@@ -243,7 +257,10 @@ class GANMonitor(tf.keras.callbacks.Callback):
 
         for i in range(generated.shape[0]):
             inversed = istft(
-                generated[i, :, :, 0][:4000] * 100, window="hanning", fs=66, nperseg=127
+                generated[i, :, :, 0][:4000] * SCALING_FACTOR,
+                window="hanning",
+                fs=66,
+                nperseg=127,
             )
             self.gp.plot_single_stream(
                 inversed[1][:4000],
