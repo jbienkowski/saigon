@@ -107,14 +107,16 @@ class GANPlotter:
 
         ax2.clear()
         ax2.set_title("Spectrogram")
-        ax2.pcolormesh(t, f, Sxx, shading="gouraud")
+        _ax2 = ax2.pcolormesh(t, f, Sxx, shading="gouraud")
         ax2.set(xlabel="Time [sec]", ylabel="Frequency [Hz]")
+        fig.colorbar(_ax2, ax=ax2)
 
         f_sftt, t_sftt, Zxx = stft(do, window="hanning", fs=fs, nperseg=nperseg)
 
         ax3.clear()
         ax3.set_title("STFT")
-        ax3.pcolormesh(t_sftt, f_sftt, np.abs(Zxx), shading="auto")
+        _ax3 = ax3.pcolormesh(t_sftt, f_sftt, np.abs(Zxx), shading="auto")
+        fig.colorbar(_ax3, ax=ax3)
 
         plt.suptitle(label, fontsize=14)
 

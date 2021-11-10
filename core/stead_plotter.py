@@ -55,18 +55,21 @@ class SteadPlotter:
 
         ax4.clear()
         ax4.set_title("East component spectrogram")
-        ax4.pcolormesh(t_0, f_0, Sxx_0, shading="gouraud")
+        _ax4 = ax4.pcolormesh(t_0, f_0, Sxx_0, shading="gouraud")
         ax4.set(xlabel="Time [sec]", ylabel="Frequency [Hz]")
+        fig.colorbar(_ax4, ax=ax4)
 
         ax5.clear()
         ax5.set_title("North component spectrogram")
-        ax5.pcolormesh(t_1, f_1, Sxx_1, shading="gouraud")
+        _ax5 = ax5.pcolormesh(t_1, f_1, Sxx_1, shading="gouraud")
         ax5.set(xlabel="Time [sec]", ylabel="Frequency [Hz]")
+        fig.colorbar(_ax5, ax=ax5)
 
         ax6.clear()
         ax6.set_title("Vertical component spectrogram")
-        ax6.pcolormesh(t_2, f_2, Sxx_2, shading="gouraud")
+        _ax6 = ax6.pcolormesh(t_2, f_2, Sxx_2, shading="gouraud")
         ax6.set(xlabel="Time [sec]", ylabel="Frequency [Hz]")
+        fig.colorbar(_ax6, ax=ax6)
 
         f_sftt_0, t_sftt_0, Zxx_0 = stft(
             comp_e, window="hanning", fs=fs, nperseg=nperseg
@@ -80,15 +83,18 @@ class SteadPlotter:
 
         ax7.clear()
         ax7.set_title("East component STFT")
-        ax7.pcolormesh(t_sftt_0, f_sftt_0, np.abs(Zxx_0), shading="auto")
+        _ax7 = ax7.pcolormesh(t_sftt_0, f_sftt_0, np.abs(Zxx_0), shading="auto")
+        fig.colorbar(_ax7, ax=ax7)
 
         ax8.clear()
         ax8.set_title("North component STFT")
-        ax8.pcolormesh(t_sftt_1, f_sftt_1, np.abs(Zxx_1), shading="auto")
+        _ax8 = ax8.pcolormesh(t_sftt_1, f_sftt_1, np.abs(Zxx_1), shading="auto")
+        fig.colorbar(_ax8, ax=ax8)
 
         ax9.clear()
         ax9.set_title("Vertical component STFT")
-        ax9.pcolormesh(t_sftt_2, f_sftt_2, np.abs(Zxx_2), shading="auto")
+        _ax9 = ax9.pcolormesh(t_sftt_2, f_sftt_2, np.abs(Zxx_2), shading="auto")
+        fig.colorbar(_ax9, ax=ax9)
 
         type = "Earthquake" if do.trace_category == "earthquake_local" else "Noise"
         plt.suptitle(f"{type}: {do.trace_name} at {do.get_ts_short()}", fontsize=14)

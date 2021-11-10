@@ -14,7 +14,7 @@ logging.basicConfig(
     datefmt="%Y-%m-%dT%H:%M:%S",
 )
 
-def plot_examples(quantity):
+def plot_examples(cfg, quantity):
     reader = SteadReader(cfg)
     plotter = SteadPlotter()
     stead_data = reader.get_event_data(0, quantity)
