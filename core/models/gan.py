@@ -208,6 +208,11 @@ class GANMonitor(tf.keras.callbacks.Callback):
         self.gp = GANPlotter()
 
     def on_epoch_end(self, epoch, logs=None):
+        logging.info(f"Finished epoch number {epoch}!")
+
+        # if epoch % 10 == 0:
+        #     self.model.discriminator.save("checkpoints")
+
         random_latent_vectors = tf.random.normal(
             shape=(1, self.latent_dim)
         )
