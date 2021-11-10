@@ -9,6 +9,10 @@ log/*
 examples/*
 !examples/.gitkeep
 
+# Checkpoints
+checkpoints/*
+!checkpoints/.gitkeep
+
 
 # Data
 data/*
