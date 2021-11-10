@@ -5,6 +5,11 @@
 log/*
 !log/.gitkeep
 
+# Examples
+examples/*
+!examples/.gitkeep
+
+
 # Data
 data/*
 !data/.gitkeep

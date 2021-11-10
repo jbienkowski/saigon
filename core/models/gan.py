@@ -1,4 +1,5 @@
 import os
+import logging
 import h5py
 import tensorflow as tf
 
@@ -8,19 +9,16 @@ from scipy.signal import istft
 
 from core.gan_plotter import GANPlotter
 
-SCALING_FACTOR = 0
+SCALING_FACTOR = 100
 
 class GAN(tf.keras.Model):
     MODEL_NAME = "GAN-EVENTS"
-    BUFFER_SIZE = 1000
-    BATCH_SIZE = 256
+    BUFFER_SIZE = 10000
+    BATCH_SIZE = 128
     EPOCHS = 100
     LATENT_DIM = 100
-    NUM_EXAMPLES_TO_GENERATE = 1
     FOLDER_NAME = f"{MODEL_NAME} at {strftime('%H:%M')}"
     LOG_DIR = os.path.join("log/", FOLDER_NAME)
-    CHECKPOINT_DIR = "./out/training_checkpoints"
-    CHECKPOINT_PREFIX = os.path.join(CHECKPOINT_DIR, "ckpt")
 
     def __init__(self, cfg):
         super(GAN, self).__init__()
@@ -29,18 +27,6 @@ class GAN(tf.keras.Model):
         self.discriminator = self.make_discriminator_model()
         # Function to calculate cross entropy loss
         self.cross_entropy = tf.keras.losses.BinaryCrossentropy(from_logits=True)
-        self.seed = tf.random.normal([self.NUM_EXAMPLES_TO_GENERATE, self.LATENT_DIM])
-        self.generator_optiimzer = tf.keras.optimizers.Adam(1e-4)
-        self.discriminator_optimizer = tf.keras.optimizers.Adam(1e-4)
-
-        self.checkpoint = tf.train.Checkpoint(
-            generator_optimizer=self.generator_optiimzer,
-            discriminator_optimizer=self.discriminator_optimizer,
-            generator=self.generator,
-            discriminator=self.discriminator,
-        )
-
-        self.callback = tf.keras.callbacks.TensorBoard(self.LOG_DIR)
 
     def compile(self, d_optimizer, g_optimizer, loss_fn):
         super(GAN, self).compile()
@@ -55,7 +41,7 @@ class GAN(tf.keras.Model):
         return [self.d_loss_metric, self.g_loss_metric]
 
     def train_step(self, real_images):
-        noise = tf.random.normal([self.BATCH_SIZE, self.LATENT_DIM], stddev=10e3)
+        noise = tf.random.normal([self.BATCH_SIZE, self.LATENT_DIM])
 
         with tf.GradientTape() as gen_tape, tf.GradientTape() as disc_tape:
             generated_images = self.generator(noise, training=True)
@@ -116,7 +102,7 @@ class GAN(tf.keras.Model):
         )
         model.add(layers.BatchNormalization())
         model.add(layers.LeakyReLU())
-        model.add(layers.Dropout(0.3))
+        model.add(layers.Dropout(0.2))
 
         model.add(
             layers.Conv2DTranspose(
@@ -125,7 +111,7 @@ class GAN(tf.keras.Model):
         )
         model.add(layers.BatchNormalization())
         model.add(layers.LeakyReLU())
-        model.add(layers.Dropout(0.3))
+        model.add(layers.Dropout(0.2))
 
         model.add(
             layers.Conv2DTranspose(
@@ -149,11 +135,11 @@ class GAN(tf.keras.Model):
             )
         )
         model.add(layers.LeakyReLU())
-        model.add(layers.Dropout(0.3))
+        model.add(layers.Dropout(0.2))
 
         model.add(layers.Conv2D(312, (5, 5), strides=(2, 2), padding="same"))
         model.add(layers.LeakyReLU())
-        model.add(layers.Dropout(0.3))
+        model.add(layers.Dropout(0.2))
 
         model.add(layers.Flatten())
         model.add(layers.Dense(1))
@@ -169,7 +155,7 @@ class GAN(tf.keras.Model):
             print("Successfully created dirs!")
 
         (keys, components, x_train) = self.get_stft_data(
-            self._cfg["stead_path_db_processed_stft"], 25000
+            self._cfg["stead_path_db_processed_stft"], 100000
         )
 
         x_train = x_train.reshape(x_train.shape[0], 78, 78, 1)
@@ -200,7 +186,7 @@ class GAN(tf.keras.Model):
             loss_fn=tf.keras.losses.BinaryCrossentropy(),
         )
 
-        self.callback.set_model(self)
+        # self.callback.set_model(self)
 
         tensorboard_callback = tf.keras.callbacks.TensorBoard(
             log_dir=self.LOG_DIR, histogram_freq=1
@@ -211,20 +197,19 @@ class GAN(tf.keras.Model):
             epochs=self.EPOCHS,
             callbacks=[
                 tensorboard_callback,
-                GANMonitor(1, self.LATENT_DIM),
+                GANMonitor(self.LATENT_DIM),
             ],
         )
 
 
 class GANMonitor(tf.keras.callbacks.Callback):
-    def __init__(self, num_img, latent_dim):
-        self.num_img = num_img
+    def __init__(self, latent_dim):
         self.latent_dim = latent_dim
         self.gp = GANPlotter()
 
     def on_epoch_end(self, epoch, logs=None):
         random_latent_vectors = tf.random.normal(
-            shape=(self.num_img, self.latent_dim), stddev=10e3
+            shape=(1, self.latent_dim)
         )
         generated = self.model.generator(random_latent_vectors)
 
