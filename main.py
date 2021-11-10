@@ -1,22 +1,35 @@
-import logging
 import json
+
+import logging
+from logging.handlers import RotatingFileHandler
 
 from core.stead_reader import SteadReader
 from core.stead_plotter import SteadPlotter
 from core.models.gan import GAN
 
 logging.basicConfig(
-    handlers=[logging.StreamHandler()],
+    handlers=[RotatingFileHandler("log/converter.log", maxBytes=10000000, backupCount=10)],
     level=logging.INFO,
     format="[%(asctime)s] %(levelname)s [%(name)s.%(funcName)s:%(lineno)d] %(message)s",
     datefmt="%Y-%m-%dT%H:%M:%S",
 )
-logger = logging.getLogger(__name__)
+
+def plot_examples(quantity):
+    reader = SteadReader(cfg)
+    plotter = SteadPlotter()
+    stead_data = reader.get_event_data(0, quantity)
+
+    for item in stead_data:
+        plotter.plot_all(item)
+
+def prepare_stft_data():
+    reader = SteadReader(cfg)
+    reader.prepare_stft_data()
 
 
 if __name__ == "__main__":
     """Script entry point"""
-    logger.info("Bonjour!")
+    logging.info("Bonjour!")
 
     cfg = None
     with open("./config.json", "r") as f:
@@ -25,12 +38,4 @@ if __name__ == "__main__":
     m = GAN(cfg)
     m.run()
 
-    # reader = SteadReader(cfg)
-    # plotter = SteadPlotter()
-
-    # reader.prepare_stft_data_64()
-
-    # stead_data = reader.get_event_data(10,20)
-    # plotter.plot_all(stead_data[0])
-
-    logger.info("Au revoir!")
+    logging.info("Au revoir!")
