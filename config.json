@@ -6,6 +6,7 @@
     "stead_path_db_processed_mixed": "data/STEAD-processed-mixed.hdf5",
     "stead_path_db_processed_gan": "data/STEAD-processed-gan.hdf5",
     "stead_path_db_processed_stft": "data/STEAD-processed-stft.hdf5",
+    "stead_path_db_processed_stft_microseism": "data/STEAD-processed-stft-microseism.hdf5",
     "stead_path_db_processed_stft_64": "data/STEAD-processed-stft-64.hdf5",
     "tf_log_path": "log",
     "classes": ["earthquake", "noise"],

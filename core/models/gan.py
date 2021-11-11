@@ -9,7 +9,8 @@ from scipy.signal import istft
 
 from core.gan_plotter import GANPlotter
 
-SCALING_FACTOR = 100
+# SCALING_FACTOR = 1
+
 
 class GAN(tf.keras.Model):
     MODEL_NAME = "GAN-EVENTS"
@@ -90,7 +91,7 @@ class GAN(tf.keras.Model):
             layers.Dense(3 * 3 * 128, use_bias=False, input_shape=(self.LATENT_DIM,))
         )
         model.add(layers.BatchNormalization())
-        model.add(layers.LeakyReLU())
+        model.add(layers.LeakyReLU(alpha=0.2))
         model.add(layers.Dropout(0.2))
 
         model.add(layers.Reshape((3, 3, 128)))
@@ -101,7 +102,7 @@ class GAN(tf.keras.Model):
             )
         )
         model.add(layers.BatchNormalization())
-        model.add(layers.LeakyReLU())
+        model.add(layers.LeakyReLU(alpha=0.2))
         model.add(layers.Dropout(0.2))
 
         model.add(
@@ -110,7 +111,7 @@ class GAN(tf.keras.Model):
             )
         )
         model.add(layers.BatchNormalization())
-        model.add(layers.LeakyReLU())
+        model.add(layers.LeakyReLU(alpha=0.2))
         model.add(layers.Dropout(0.2))
 
         model.add(
@@ -120,7 +121,7 @@ class GAN(tf.keras.Model):
                 strides=(1, 1),
                 padding="same",
                 use_bias=False,
-                activation="tanh",
+                activation="linear",
             )
         )
 
@@ -134,15 +135,15 @@ class GAN(tf.keras.Model):
                 156, (5, 5), strides=(2, 2), padding="same", input_shape=[78, 78, 1]
             )
         )
-        model.add(layers.LeakyReLU())
+        model.add(layers.LeakyReLU(alpha=0.2))
         model.add(layers.Dropout(0.2))
 
         model.add(layers.Conv2D(312, (5, 5), strides=(2, 2), padding="same"))
-        model.add(layers.LeakyReLU())
+        model.add(layers.LeakyReLU(alpha=0.2))
         model.add(layers.Dropout(0.2))
 
         model.add(layers.Flatten())
-        model.add(layers.Dense(1))
+        model.add(layers.Dense(1, activation="sigmoid"))
 
         return model
 
@@ -161,18 +162,18 @@ class GAN(tf.keras.Model):
         x_train = x_train.reshape(x_train.shape[0], 78, 78, 1)
 
         # Determine the scaling factor based on dataset
-        global SCALING_FACTOR
-        if SCALING_FACTOR == 0:
-            SCALING_FACTOR = int(
-                max(
-                    [
-                        abs(min([x.min() for x in x_train])),
-                        abs(max([x.max() for x in x_train])),
-                    ]
-                )
-            )
+        # global SCALING_FACTOR
+        # if SCALING_FACTOR == 0:
+        #     SCALING_FACTOR = int(
+        #         max(
+        #             [
+        #                 abs(min([x.min() for x in x_train])),
+        #                 abs(max([x.max() for x in x_train])),
+        #             ]
+        #         )
+        #     )
 
-        x_train /= SCALING_FACTOR
+        # x_train /= SCALING_FACTOR
 
         train_dataset = (
             tf.data.Dataset.from_tensor_slices(x_train)
@@ -201,6 +202,10 @@ class GAN(tf.keras.Model):
             ],
         )
 
+        # Save a final models
+        self.generator.save("out/gen")
+        self.discriminator.save("out/disc")
+
 
 class GANMonitor(tf.keras.callbacks.Callback):
     def __init__(self, latent_dim):
@@ -210,17 +215,17 @@ class GANMonitor(tf.keras.callbacks.Callback):
     def on_epoch_end(self, epoch, logs=None):
         logging.info(f"Finished epoch number {epoch}!")
 
-        # if epoch % 10 == 0:
-        #     self.model.discriminator.save("checkpoints")
+        # Save a snapshot of both models each XX epochs
+        if epoch % 25 == 0:
+            self.model.generator.save(f"out/gen-epoch-{epoch}")
+            self.model.discriminator.save(f"out/disc-epoch-{epoch}")
 
-        random_latent_vectors = tf.random.normal(
-            shape=(1, self.latent_dim)
-        )
+        random_latent_vectors = tf.random.normal(shape=(1, self.latent_dim))
         generated = self.model.generator(random_latent_vectors)
 
         for i in range(generated.shape[0]):
             inversed = istft(
-                generated[i, :, :, 0][:6000] * SCALING_FACTOR,
+                generated[i, :, :, 0][:6000],
                 window="hanning",
                 fs=100,
                 nperseg=155,

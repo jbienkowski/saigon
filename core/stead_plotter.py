@@ -100,7 +100,6 @@ class SteadPlotter:
         plt.suptitle(f"{type}: {do.trace_name} at {do.get_ts_short()}", fontsize=14)
 
         plt.savefig(f"out/{do.trace_name}.png")
-        plt.close(fig)
 
     def plot_time_series(self, do: SteadDataObject):
         timespan = do.get_timespan()
@@ -192,3 +191,4 @@ class SteadPlotter:
 
         if file_path != None:
             plt.savefig(file_path)
+            plt.close(fig)

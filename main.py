@@ -7,8 +7,10 @@ from core.stead_reader import SteadReader
 from core.stead_plotter import SteadPlotter
 from core.models.gan import GAN
 
+from core.model_tester import ModelTester
+
 logging.basicConfig(
-    handlers=[RotatingFileHandler("log/converter.log", maxBytes=10000000, backupCount=10)],
+    handlers=[RotatingFileHandler("log/saigon.log", maxBytes=10000000, backupCount=10)],
     level=logging.INFO,
     format="[%(asctime)s] %(levelname)s [%(name)s.%(funcName)s:%(lineno)d] %(message)s",
     datefmt="%Y-%m-%dT%H:%M:%S",
@@ -37,5 +39,7 @@ if __name__ == "__main__":
 
     m = GAN(cfg)
     m.run()
+
+    mt = ModelTester(cfg)
 
     logging.info("Au revoir!")

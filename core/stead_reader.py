@@ -134,11 +134,12 @@ class SteadReader:
 
     def prepare_stft_data(self):
         df = pd.read_csv(self._cfg["stead_path_csv"])
+        df = df.sample(frac = 1)
 
         df_eq = df[
             (df.trace_category == "earthquake_local")
-            & (df.source_distance_km <= 75)
-            & (df.source_magnitude > 1.5)
+            & (df.source_distance_km <= 50)
+            & (df.source_magnitude < 3.5)
         ]
         eq_list = df_eq["trace_name"].to_list()[:100000]
 
@@ -147,7 +148,7 @@ class SteadReader:
         len_streams = len_events * 3
 
         # Init the HDF5 file
-        with h5py.File(self._cfg["stead_path_db_processed_stft"], "a") as f:
+        with h5py.File(self._cfg["stead_path_db_processed_stft_microseism"], "a") as f:
             f.create_dataset("keys", shape=(len_streams,), dtype="S50")
             f.create_dataset("components", shape=(len_streams,), dtype="S1")
             f.create_dataset("data", shape=(len_streams, 78, 78), dtype="float32")
@@ -156,7 +157,7 @@ class SteadReader:
             if event_idx % 100 == 0:
                 print(f"{event_idx}/{len_events}")
             do = self.get_data_by_evi(key)
-            with h5py.File(self._cfg["stead_path_db_processed_stft"], "a") as f:
+            with h5py.File(self._cfg["stead_path_db_processed_stft_microseism"], "a") as f:
                 components = do.get_components()
                 for component_idx, c in enumerate(components):
                     _, _, Zxx = stft(c, window="hanning", fs=100, nperseg=155)
