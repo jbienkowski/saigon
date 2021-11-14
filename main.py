@@ -11,12 +11,12 @@ from core.model_tester import ModelTester
 
 logging.basicConfig(
     handlers=[RotatingFileHandler("out/saigon.log", maxBytes=10000000, backupCount=10)],
-    level=logging.INFO,
+    level=logging.DEBUG,
     format="[%(asctime)s] %(levelname)s [%(name)s.%(funcName)s:%(lineno)d] %(message)s",
     datefmt="%Y-%m-%dT%H:%M:%S",
 )
 
-from core.models import cigan
+from core.models import cigan64
 
 def plot_examples(cfg, quantity):
     reader = SteadReader(cfg)

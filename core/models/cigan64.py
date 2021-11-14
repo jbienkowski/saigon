@@ -2,7 +2,6 @@ import logging
 import h5py
 from numpy import zeros
 from numpy import ones
-from numpy.lib.financial import nper
 from numpy.random import randn
 from numpy.random import randint
 from tensorflow.keras.optimizers import Adam
@@ -23,51 +22,43 @@ def make_generator_model(latent_dim):
 
     model.add(
         layers.Conv2DTranspose(
-            64, (20, 20), strides=(1, 1), padding="same", use_bias=False
+            64, (2, 2), strides=(2, 2), padding="same", use_bias=False
         )
     )
     model.add(layers.BatchNormalization())
     model.add(layers.LeakyReLU())
+    model.add(layers.Dropout(0.1))
 
     model.add(
         layers.Conv2DTranspose(
-            64, (20, 20), strides=(2, 2), padding="same", use_bias=False
+            64, (2, 2), strides=(2, 2), padding="same", use_bias=False
         )
     )
     model.add(layers.BatchNormalization())
     model.add(layers.LeakyReLU())
-    # model.add(layers.Dropout(0.1))
+    model.add(layers.Dropout(0.1))
 
     model.add(
         layers.Conv2DTranspose(
-            64, (20, 20), strides=(2, 2), padding="same", use_bias=False
+            64, (2, 2), strides=(2, 2), padding="same", use_bias=False
         )
     )
     model.add(layers.BatchNormalization())
     model.add(layers.LeakyReLU())
-    # model.add(layers.Dropout(0.1))
+    model.add(layers.Dropout(0.1))
 
     model.add(
         layers.Conv2DTranspose(
-            64, (20, 20), strides=(2, 2), padding="same", use_bias=False
+            64, (2, 2), strides=(2, 2), padding="same", use_bias=False
         )
     )
     model.add(layers.BatchNormalization())
     model.add(layers.LeakyReLU())
-    # model.add(layers.Dropout(0.1))
+    model.add(layers.Dropout(0.1))
 
     model.add(
         layers.Conv2DTranspose(
-            64, (20, 20), strides=(2, 2), padding="same", use_bias=False
-        )
-    )
-    model.add(layers.BatchNormalization())
-    model.add(layers.LeakyReLU())
-    # model.add(layers.Dropout(0.1))
-
-    model.add(
-        layers.Conv2DTranspose(
-            64, (20, 20), strides=(2, 2), padding="same", use_bias=False
+            64, (2, 2), strides=(2, 2), padding="same", use_bias=False
         )
     )
     model.add(layers.BatchNormalization())
@@ -93,20 +84,32 @@ def make_discriminator_model():
 
     model.add(layers.Conv2D(512, (1, 1), padding="same", input_shape=[64, 64, 1]))
     model.add(layers.LeakyReLU())
-    # model.add(layers.Dropout(0.2))
+    model.add(layers.Dropout(0.2))
 
-    model.add(layers.Conv2D(256, (10, 10), strides=(2, 2), padding="same"))
+    model.add(layers.Conv2D(128, (2, 2), strides=(2, 2), padding="same"))
     model.add(layers.LeakyReLU())
-    # model.add(layers.Dropout(0.2))
+    model.add(layers.Dropout(0.2))
 
-    model.add(layers.Conv2D(128, (10, 10), strides=(2, 2), padding="same"))
+    model.add(layers.Conv2D(128, (2, 2), strides=(2, 2), padding="same"))
     model.add(layers.LeakyReLU())
-    # model.add(layers.Dropout(0.2))
+    model.add(layers.Dropout(0.2))
+    
+    model.add(layers.Conv2D(128, (2, 2), strides=(2, 2), padding="same"))
+    model.add(layers.LeakyReLU())
+    model.add(layers.Dropout(0.2))
+    
+    model.add(layers.Conv2D(128, (2, 2), strides=(2, 2), padding="same"))
+    model.add(layers.LeakyReLU())
+    model.add(layers.Dropout(0.2))
+    
+    model.add(layers.Conv2D(128, (2, 2), strides=(2, 2), padding="same"))
+    model.add(layers.LeakyReLU())
+    model.add(layers.Dropout(0.2))
 
     model.add(layers.Flatten())
     model.add(layers.Dense(1, activation="sigmoid"))
 
-    opt = Adam(lr=0.0002, beta_1=0.5)
+    opt = Adam(learning_rate=0.00002, beta_1=0.5)
     model.compile(loss="binary_crossentropy", optimizer=opt, metrics=["accuracy"])
     return model
 
@@ -122,7 +125,7 @@ def define_gan(g_model, d_model):
     # add the discriminator
     model.add(d_model)
     # compile model
-    opt = Adam(lr=0.0002, beta_1=0.5)
+    opt = Adam(learning_rate=0.0002, beta_1=0.5)
     model.compile(loss="binary_crossentropy", optimizer=opt)
     return model
 
@@ -193,7 +196,7 @@ def summarize_performance(epoch, g_model, d_model, dataset, latent_dim, n_sample
     # evaluate discriminator on fake examples
     _, acc_fake = d_model.evaluate(x_fake, y_fake, verbose=0)
     # summarize discriminator performance
-    logging.info(f">Accuracy real: {acc_real * 100}, fake: {acc_fake * 100}")
+    logging.warning(f">Accuracy real: {acc_real * 100}, fake: {acc_fake * 100}")
     save_plot(x_fake, epoch)
     # save the generator model tile file
     g_model.save(f"out/gen-{epoch+1}")
