@@ -5,16 +5,18 @@ from logging.handlers import RotatingFileHandler
 
 from core.stead_reader import SteadReader
 from core.stead_plotter import SteadPlotter
-from core.models.gan import GAN
+from core.models.gan64 import GAN
 
 from core.model_tester import ModelTester
 
 logging.basicConfig(
-    handlers=[RotatingFileHandler("log/saigon.log", maxBytes=10000000, backupCount=10)],
+    handlers=[RotatingFileHandler("out/saigon.log", maxBytes=10000000, backupCount=10)],
     level=logging.INFO,
     format="[%(asctime)s] %(levelname)s [%(name)s.%(funcName)s:%(lineno)d] %(message)s",
     datefmt="%Y-%m-%dT%H:%M:%S",
 )
+
+from core.models import cigan
 
 def plot_examples(cfg, quantity):
     reader = SteadReader(cfg)
@@ -23,10 +25,6 @@ def plot_examples(cfg, quantity):
 
     for item in stead_data:
         plotter.plot_all(item)
-
-def prepare_stft_data():
-    reader = SteadReader(cfg)
-    reader.prepare_stft_data()
 
 
 if __name__ == "__main__":
@@ -37,9 +35,10 @@ if __name__ == "__main__":
     with open("./config.json", "r") as f:
         cfg = json.load(f)
 
-    m = GAN(cfg)
-    m.run()
+    # mt = ModelTester(cfg)
+    # sr = SteadReader(cfg)
 
-    mt = ModelTester(cfg)
+    # m = GAN(cfg)
+    # m.run()
 
     logging.info("Au revoir!")

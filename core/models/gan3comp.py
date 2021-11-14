@@ -81,9 +81,8 @@ class GAN(tf.keras.Model):
     def get_stft_data(self, file_path, arr_length):
         with h5py.File(file_path, "r") as f:
             keys = f["keys"][:arr_length]
-            components = f["components"][:arr_length]
             data = f["data"][:arr_length]
-            return (keys, components, data)
+            return (keys, data)
 
     def make_generator_model(self):
         model = tf.keras.Sequential()
@@ -107,7 +106,7 @@ class GAN(tf.keras.Model):
 
         model.add(
             layers.Conv2DTranspose(
-                128, (10, 10), strides=(13, 13), padding="same", use_bias=False
+                64, (10, 10), strides=(13, 13), padding="same", use_bias=False
             )
         )
         model.add(layers.BatchNormalization())
@@ -132,7 +131,7 @@ class GAN(tf.keras.Model):
 
         model.add(
             layers.Conv2D(
-                156, (5, 5), strides=(2, 2), padding="same", input_shape=[78, 78, 1]
+                156, (5, 5), strides=(2, 2), padding="same", input_shape=[78, 78, 3]
             )
         )
         model.add(layers.LeakyReLU(alpha=0.2))
@@ -155,11 +154,25 @@ class GAN(tf.keras.Model):
         else:
             print("Successfully created dirs!")
 
-        (keys, components, x_train) = self.get_stft_data(
-            self._cfg["stead_path_db_processed_stft_microseism"], 100000
+        (keys, x_train) = self.get_stft_data(
+            self._cfg["stead_path_db_processed_stft"], 100000
         )
 
-        x_train = x_train.reshape(x_train.shape[0], 78, 78, 1)
+        x_train = x_train.reshape(x_train.shape[0], 78, 78, 3)
+
+        # Determine the scaling factor based on dataset
+        # global SCALING_FACTOR
+        # if SCALING_FACTOR == 0:
+        #     SCALING_FACTOR = int(
+        #         max(
+        #             [
+        #                 abs(min([x.min() for x in x_train])),
+        #                 abs(max([x.max() for x in x_train])),
+        #             ]
+        #         )
+        #     )
+
+        # x_train /= SCALING_FACTOR
 
         train_dataset = (
             tf.data.Dataset.from_tensor_slices(x_train)
@@ -168,8 +181,8 @@ class GAN(tf.keras.Model):
         )
 
         self.compile(
-            d_optimizer=tf.keras.optimizers.Adam(learning_rate=0.00001, beta_1=0.5),
-            g_optimizer=tf.keras.optimizers.Adam(learning_rate=0.00001, beta_1=0.5),
+            d_optimizer=tf.keras.optimizers.Adam(learning_rate=0.00001),
+            g_optimizer=tf.keras.optimizers.Adam(learning_rate=0.00001),
             loss_fn=tf.keras.losses.BinaryCrossentropy(),
         )
 

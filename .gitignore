@@ -1,10 +1,6 @@
 # MacOS artifacts
 .DS_Store
 
-# Logs
-log/*
-!log/.gitkeep
-
 # Examples
 examples/*
 !examples/.gitkeep

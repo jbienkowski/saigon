@@ -36,10 +36,11 @@ class SteadReader:
     def get_event_data(self, idx_start, idx_end):
         streams = []
         df = pd.read_csv(self._cfg["stead_path_csv"])
+        df = df.sample(frac = 1)
         df = df[
             (df.trace_category == "earthquake_local")
-            & (df.source_distance_km <= 75)
-            & (df.source_magnitude > 1.5)
+            & (df.source_distance_km <= 50)
+            & (df.source_magnitude < 3.5)
         ]
         ev_list = df["trace_name"].to_list()[idx_start:idx_end]
 
@@ -173,13 +174,14 @@ class SteadReader:
 
     def prepare_stft_data_64(self):
         df = pd.read_csv(self._cfg["stead_path_csv"])
+        df = df.sample(frac = 1)
 
         df_eq = df[
             (df.trace_category == "earthquake_local")
-            & (df.source_distance_km <= 75)
-            & (df.source_magnitude > 1.5)
+            & (df.source_distance_km <= 50)
+            & (df.source_magnitude < 3.5)
         ]
-        eq_list = df_eq["trace_name"].to_list()[:200000]
+        eq_list = df_eq["trace_name"].to_list()[:100000]
 
         len_events = len(eq_list)
         # We have 3 streams per event

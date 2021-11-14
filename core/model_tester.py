@@ -4,17 +4,22 @@ from scipy.signal import istft
 
 from core.gan_plotter import GANPlotter
 
-NOISE_DIM = [1, 100]
-FS = 100
-NPERSEG = 155
-SAMPLE_LENGTH = 6000
+# NOISE_DIM = (1, 100)
+# FS = 100
+# NPERSEG = 155
+# SAMPLE_LENGTH = 6000
+
+NOISE_DIM = (1, 100)
+FS = 66
+NPERSEG = 127
+SAMPLE_LENGTH = 4000
 
 class ModelTester:
     def __init__(self, cfg):
         self._cfg = cfg
         self.gp = GANPlotter()
-        self.discriminator = tf.keras.models.load_model("out/disc")
-        self.generator = tf.keras.models.load_model("out/gen")
+        self.discriminator = tf.keras.models.load_model("out/disc-epoch-0")
+        self.generator = tf.keras.models.load_model("out/gen-epoch-0")
 
     def generate_synth(self):
         noise = tf.random.normal(NOISE_DIM)
