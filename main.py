@@ -7,7 +7,11 @@ from core.stead_reader import SteadReader
 from core.stead_plotter import SteadPlotter
 from core.models.gan64 import GAN
 
+from core.gan_plotter import GANPlotter
+
 from core.model_tester import ModelTester
+
+from scipy.signal import resample
 
 logging.basicConfig(
     handlers=[RotatingFileHandler("out/saigon.log", maxBytes=10000000, backupCount=10)],
@@ -18,13 +22,30 @@ logging.basicConfig(
 
 from core.models import cigan64
 
+
 def plot_examples(cfg, quantity):
     reader = SteadReader(cfg)
     plotter = SteadPlotter()
     stead_data = reader.get_event_data(0, quantity)
+    gp = GANPlotter()
 
-    for item in stead_data:
-        plotter.plot_all(item)
+    gp.plot_single_stream(
+        stead_data[0].get_component("e"),
+        f"{stead_data[0].trace_name} (E)",
+        fs=100,
+        nperseg=155,
+        file_path=f"out/{stead_data[0].trace_name}-100Hz.pdf",
+    )
+    gp.plot_single_stream(
+        resample(stead_data[0].get_component("e"), 4000),
+        f"{stead_data[0].trace_name} (E)",
+        fs=66,
+        nperseg=127,
+        file_path=f"out/{stead_data[0].trace_name}-66Hz.pdf",
+    )
+
+    # for item in stead_data:
+    #     plotter.plot_all(item)
 
 
 if __name__ == "__main__":
