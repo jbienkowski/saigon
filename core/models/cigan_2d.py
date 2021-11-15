@@ -245,10 +245,8 @@ def save_plot(examples, epoch):
     """
     for idx, _ in enumerate(examples[:5]):
         plot_all(
-            istft(examples.transpose(2, 0, 1), fs=FS, nperseg=NPERSEG)[1],
+            istft(examples[idx].transpose(2, 0, 1), fs=FS, nperseg=NPERSEG)[1],
             f"GAN Event (epoch {epoch+1})",
-            fs=FS,
-            nperseg=NPERSEG,
             file_path=f"out/epoch_{epoch+1}_image_{idx}.png",
         )
 

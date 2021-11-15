@@ -20,7 +20,7 @@ logging.basicConfig(
     datefmt="%Y-%m-%dT%H:%M:%S",
 )
 
-# from core.models import cigan64
+from core.models import cigan_2d
 
 
 def plot_examples(cfg, quantity):
@@ -58,8 +58,8 @@ if __name__ == "__main__":
 
     # mt = ModelTester(cfg)
     sr = SteadReader(cfg)
-    sr.prepare_datasets_case_one()
-    sr.prepare_datasets_case_two()
+    # sr.prepare_datasets_case_one()
+    # sr.prepare_datasets_case_two()
 
     # m = GAN(cfg)
     # m.run()
