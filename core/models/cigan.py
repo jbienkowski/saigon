@@ -26,7 +26,7 @@ def make_generator_model(latent_dim):
 
     model.add(
         layers.Conv2DTranspose(
-            128, (4, 4), strides=(2, 2), padding="same", use_bias=False
+            256, (20, 20), strides=(2, 2), padding="same", use_bias=False
         )
     )
     model.add(layers.BatchNormalization())
@@ -35,7 +35,7 @@ def make_generator_model(latent_dim):
 
     model.add(
         layers.Conv2DTranspose(
-            128, (4, 4), strides=(13, 13), padding="same", use_bias=False
+            128, (20, 20), strides=(13, 13), padding="same", use_bias=False
         )
     )
     model.add(layers.BatchNormalization())
@@ -70,7 +70,11 @@ def make_discriminator_model():
     model.add(layers.LeakyReLU(alpha=0.2))
     model.add(layers.Dropout(0.2))
 
-    model.add(layers.Conv2D(256, (3, 3), strides=(3, 3), padding="same"))
+    model.add(layers.Conv2D(128, (3, 3), strides=(3, 3), padding="same"))
+    model.add(layers.LeakyReLU(alpha=0.2))
+    model.add(layers.Dropout(0.2))
+
+    model.add(layers.Conv2D(128, (3, 3), strides=(13, 13), padding="same"))
     model.add(layers.LeakyReLU(alpha=0.2))
     model.add(layers.Dropout(0.2))
 

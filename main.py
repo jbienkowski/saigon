@@ -11,7 +11,7 @@ from core.model_tester import ModelTester
 
 logging.basicConfig(
     handlers=[RotatingFileHandler("out/saigon.log", maxBytes=10000000, backupCount=10)],
-    level=logging.DEBUG,
+    level=logging.INFO,
     format="[%(asctime)s] %(levelname)s [%(name)s.%(funcName)s:%(lineno)d] %(message)s",
     datefmt="%Y-%m-%dT%H:%M:%S",
 )
