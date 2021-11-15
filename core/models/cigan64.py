@@ -14,15 +14,15 @@ from core.gan_plotter import GANPlotter
 
 def make_generator_model(latent_dim):
     model = Sequential()
-    model.add(layers.Dense(2 * 2 * 128, use_bias=False, input_shape=(latent_dim,)))
+    model.add(layers.Dense(1 * 1 * 128, use_bias=False, input_shape=(latent_dim,)))
     model.add(layers.BatchNormalization())
     model.add(layers.LeakyReLU())
 
-    model.add(layers.Reshape((2, 2, 128)))
+    model.add(layers.Reshape((1, 1, 128)))
 
     model.add(
         layers.Conv2DTranspose(
-            64, (2, 2), strides=(2, 2), padding="same", use_bias=False
+            64, (60, 60), strides=(64, 64), padding="same", use_bias=False
         )
     )
     model.add(layers.BatchNormalization())
@@ -31,7 +31,7 @@ def make_generator_model(latent_dim):
 
     model.add(
         layers.Conv2DTranspose(
-            64, (2, 2), strides=(2, 2), padding="same", use_bias=False
+            64, (2, 2), strides=(1, 1), padding="same", use_bias=False
         )
     )
     model.add(layers.BatchNormalization())
@@ -40,7 +40,7 @@ def make_generator_model(latent_dim):
 
     model.add(
         layers.Conv2DTranspose(
-            64, (2, 2), strides=(2, 2), padding="same", use_bias=False
+            64, (2, 2), strides=(1, 1), padding="same", use_bias=False
         )
     )
     model.add(layers.BatchNormalization())
@@ -49,7 +49,7 @@ def make_generator_model(latent_dim):
 
     model.add(
         layers.Conv2DTranspose(
-            64, (2, 2), strides=(2, 2), padding="same", use_bias=False
+            64, (2, 2), strides=(1, 1), padding="same", use_bias=False
         )
     )
     model.add(layers.BatchNormalization())
@@ -58,7 +58,7 @@ def make_generator_model(latent_dim):
 
     model.add(
         layers.Conv2DTranspose(
-            64, (2, 2), strides=(2, 2), padding="same", use_bias=False
+            64, (2, 2), strides=(1, 1), padding="same", use_bias=False
         )
     )
     model.add(layers.BatchNormalization())
@@ -77,6 +77,73 @@ def make_generator_model(latent_dim):
     )
 
     return model
+
+
+# def make_generator_model(latent_dim):
+#     model = Sequential()
+#     model.add(layers.Dense(2 * 2 * 128, use_bias=False, input_shape=(latent_dim,)))
+#     model.add(layers.BatchNormalization())
+#     model.add(layers.LeakyReLU())
+
+#     model.add(layers.Reshape((2, 2, 128)))
+
+#     model.add(
+#         layers.Conv2DTranspose(
+#             64, (2, 2), strides=(2, 2), padding="same", use_bias=False
+#         )
+#     )
+#     model.add(layers.BatchNormalization())
+#     model.add(layers.LeakyReLU())
+#     model.add(layers.Dropout(0.1))
+
+#     model.add(
+#         layers.Conv2DTranspose(
+#             64, (2, 2), strides=(2, 2), padding="same", use_bias=False
+#         )
+#     )
+#     model.add(layers.BatchNormalization())
+#     model.add(layers.LeakyReLU())
+#     model.add(layers.Dropout(0.1))
+
+#     model.add(
+#         layers.Conv2DTranspose(
+#             64, (2, 2), strides=(2, 2), padding="same", use_bias=False
+#         )
+#     )
+#     model.add(layers.BatchNormalization())
+#     model.add(layers.LeakyReLU())
+#     model.add(layers.Dropout(0.1))
+
+#     model.add(
+#         layers.Conv2DTranspose(
+#             64, (2, 2), strides=(2, 2), padding="same", use_bias=False
+#         )
+#     )
+#     model.add(layers.BatchNormalization())
+#     model.add(layers.LeakyReLU())
+#     model.add(layers.Dropout(0.1))
+
+#     model.add(
+#         layers.Conv2DTranspose(
+#             64, (2, 2), strides=(2, 2), padding="same", use_bias=False
+#         )
+#     )
+#     model.add(layers.BatchNormalization())
+#     model.add(layers.LeakyReLU())
+#     model.add(layers.Dropout(0.1))
+
+#     model.add(
+#         layers.Conv2DTranspose(
+#             1,
+#             (1, 1),
+#             strides=(1, 1),
+#             padding="same",
+#             use_bias=False,
+#             activation="linear",
+#         )
+#     )
+
+#     return model
 
 
 def make_discriminator_model():

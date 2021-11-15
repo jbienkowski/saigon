@@ -81,19 +81,24 @@ class SteadPlotter:
             comp_z, window="hanning", fs=fs, nperseg=nperseg
         )
 
+        if fs == 100:
+            ticks = np.arange(78)
+        else:
+            ticks = np.arange(64)
+
         ax7.clear()
         ax7.set_title("East component STFT")
-        _ax7 = ax7.pcolormesh(t_sftt_0, f_sftt_0, np.abs(Zxx_0), shading="auto")
+        _ax7 = ax7.pcolormesh(ticks, ticks, np.abs(Zxx_0), shading="auto")
         fig.colorbar(_ax7, ax=ax7)
 
         ax8.clear()
         ax8.set_title("North component STFT")
-        _ax8 = ax8.pcolormesh(t_sftt_1, f_sftt_1, np.abs(Zxx_1), shading="auto")
+        _ax8 = ax8.pcolormesh(ticks, ticks, np.abs(Zxx_1), shading="auto")
         fig.colorbar(_ax8, ax=ax8)
 
         ax9.clear()
         ax9.set_title("Vertical component STFT")
-        _ax9 = ax9.pcolormesh(t_sftt_2, f_sftt_2, np.abs(Zxx_2), shading="auto")
+        _ax9 = ax9.pcolormesh(ticks, ticks, np.abs(Zxx_2), shading="auto")
         fig.colorbar(_ax9, ax=ax9)
 
         type = "Earthquake" if do.trace_category == "earthquake_local" else "Noise"
@@ -183,9 +188,14 @@ class SteadPlotter:
 
         f_sftt, t_sftt, Zxx = stft(do, window="hanning", fs=fs, nperseg=nperseg)
 
+        if fs == 100:
+            ticks = np.arange(78)
+        else:
+            ticks = np.arange(64)
+
         ax3.clear()
         ax3.set_title("STFT")
-        ax3.pcolormesh(t_sftt, f_sftt, np.abs(Zxx), shading="auto")
+        ax3.pcolormesh(ticks, ticks, np.abs(Zxx), shading="auto")
 
         plt.suptitle(label, fontsize=14)
 

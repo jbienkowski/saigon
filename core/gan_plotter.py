@@ -69,17 +69,24 @@ class GANPlotter:
             do[2], window="hanning", fs=fs, nperseg=nperseg
         )
 
+        ticks = None
+
+        if fs == 100:
+            ticks = np.arange(78)
+        else:
+            ticks = np.arange(64)
+
         ax7.clear()
         ax7.set_title("Vertical component STFT")
-        ax7.pcolormesh(t_sftt_0, f_sftt_0, np.abs(Zxx_0), shading="auto")
+        ax7.pcolormesh(ticks, ticks, np.abs(Zxx_0), shading="auto")
 
         ax8.clear()
         ax8.set_title("North component STFT")
-        ax8.pcolormesh(t_sftt_1, f_sftt_1, np.abs(Zxx_1), shading="auto")
+        ax8.pcolormesh(ticks, ticks, np.abs(Zxx_1), shading="auto")
 
         ax9.clear()
         ax9.set_title("East component STFT")
-        ax9.pcolormesh(t_sftt_2, f_sftt_2, np.abs(Zxx_2), shading="auto")
+        ax9.pcolormesh(ticks, ticks, np.abs(Zxx_2), shading="auto")
 
         plt.suptitle(label, fontsize=14)
 
@@ -91,9 +98,9 @@ class GANPlotter:
         d0 = pd.DataFrame(data=do)
 
         fig = plt.figure(figsize=(16, 16), dpi=80)
-        ax1 = plt.subplot2grid((4, 1), (0, 0))
-        ax2 = plt.subplot2grid((4, 1), (1, 0))
-        ax3 = plt.subplot2grid((4, 1), (2, 0), rowspan=2)
+        ax1 = plt.subplot2grid((6, 1), (0, 0))
+        ax2 = plt.subplot2grid((6, 1), (1, 0))
+        ax3 = plt.subplot2grid((6, 1), (2, 0), rowspan=4)
 
         plt.subplots_adjust(hspace=0.5)
 
@@ -113,9 +120,16 @@ class GANPlotter:
 
         f_sftt, t_sftt, Zxx = stft(do, window="hanning", fs=fs, nperseg=nperseg)
 
+        ticks = None
+
+        if fs == 100:
+            ticks = np.arange(78)
+        else:
+            ticks = np.arange(64)
+
         ax3.clear()
         ax3.set_title("STFT")
-        _ax3 = ax3.pcolormesh(t_sftt, f_sftt, np.abs(Zxx), shading="auto")
+        _ax3 = ax3.pcolormesh(ticks, ticks, np.abs(Zxx), shading="auto")
         fig.colorbar(_ax3, ax=ax3)
 
         plt.suptitle(label, fontsize=14)

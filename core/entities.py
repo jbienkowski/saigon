@@ -25,12 +25,12 @@ class SteadDataObject:
         rotated = np.rot90(self.data, k=1, axes=(0, 1))
         return rotated
 
-    def get_timespan(self):
+    def get_timespan(self, samples=6000, fs=100):
         t = self.get_ts_datetime()
         time_points = []
-        for _ in range(6000):
+        for _ in range(samples):
             time_points.append(t)
-            t += timedelta(seconds=0.01)
+            t += timedelta(seconds=1/fs)
         return time_points
 
     def get_ts_datetime(self):
