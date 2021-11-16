@@ -14,13 +14,15 @@ from core.model_tester import ModelTester
 from scipy.signal import resample
 
 logging.basicConfig(
-    handlers=[RotatingFileHandler("out/saigon.log", maxBytes=10000000, backupCount=10)],
+    handlers=[RotatingFileHandler("out/saigon.log", maxBytes=10000000, backupCount=10), logging.StreamHandler()],
     level=logging.INFO,
     format="[%(asctime)s] %(levelname)s [%(name)s.%(funcName)s:%(lineno)d] %(message)s",
     datefmt="%Y-%m-%dT%H:%M:%S",
 )
 
-from core.models import cigan_2d
+
+# from core.models import cigan_2d
+from core.models import classificator
 
 
 def plot_examples(cfg, quantity):
@@ -57,7 +59,7 @@ if __name__ == "__main__":
         cfg = json.load(f)
 
     # mt = ModelTester(cfg)
-    sr = SteadReader(cfg)
+    # sr = SteadReader(cfg)
     # sr.prepare_datasets_case_one()
     # sr.prepare_datasets_case_two()
 

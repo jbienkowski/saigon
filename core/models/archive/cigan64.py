@@ -31,7 +31,7 @@ def make_generator_model(latent_dim):
 
     model.add(
         layers.Conv2DTranspose(
-            64, (2, 2), strides=(1, 1), padding="same", use_bias=False
+            64, (4, 4), strides=(1, 1), padding="same", use_bias=False
         )
     )
     model.add(layers.BatchNormalization())
@@ -40,7 +40,7 @@ def make_generator_model(latent_dim):
 
     model.add(
         layers.Conv2DTranspose(
-            64, (2, 2), strides=(1, 1), padding="same", use_bias=False
+            64, (4, 4), strides=(1, 1), padding="same", use_bias=False
         )
     )
     model.add(layers.BatchNormalization())
@@ -49,7 +49,7 @@ def make_generator_model(latent_dim):
 
     model.add(
         layers.Conv2DTranspose(
-            64, (2, 2), strides=(1, 1), padding="same", use_bias=False
+            64, (4, 4), strides=(1, 1), padding="same", use_bias=False
         )
     )
     model.add(layers.BatchNormalization())
@@ -58,7 +58,7 @@ def make_generator_model(latent_dim):
 
     model.add(
         layers.Conv2DTranspose(
-            64, (2, 2), strides=(1, 1), padding="same", use_bias=False
+            64, (4, 4), strides=(1, 1), padding="same", use_bias=False
         )
     )
     model.add(layers.BatchNormalization())
@@ -149,7 +149,7 @@ def make_generator_model(latent_dim):
 def make_discriminator_model():
     model = Sequential()
 
-    model.add(layers.Conv2D(512, (1, 1), padding="same", input_shape=[64, 64, 1]))
+    model.add(layers.Conv2D(128, (1, 1), padding="same", input_shape=[64, 64, 1]))
     model.add(layers.LeakyReLU())
     model.add(layers.Dropout(0.2))
 
@@ -176,7 +176,7 @@ def make_discriminator_model():
     model.add(layers.Flatten())
     model.add(layers.Dense(1, activation="sigmoid"))
 
-    opt = Adam(learning_rate=0.00002, beta_1=0.5)
+    opt = Adam(learning_rate=0.0002, beta_1=0.5)
     model.compile(loss="binary_crossentropy", optimizer=opt, metrics=["accuracy"])
     return model
 
@@ -197,7 +197,7 @@ def define_gan(g_model, d_model):
     return model
 
 
-def load_real_samples(arr_len=10000):
+def load_real_samples(arr_len=50000):
     with h5py.File("data/STEAD-processed-stft-64.hdf5", "r") as f:
         # keys = f["keys"][:arr_len]
         # components = f["components"][:arr_len]
@@ -271,7 +271,7 @@ def summarize_performance(epoch, g_model, d_model, dataset, latent_dim, n_sample
 
 
 # train the generator and discriminator
-def train(g_model, d_model, gan_model, dataset, latent_dim, n_epochs=50, n_batch=128):
+def train(g_model, d_model, gan_model, dataset, latent_dim, n_epochs=100, n_batch=128):
     bat_per_epo = int(dataset.shape[0] / n_batch)
     half_batch = int(n_batch / 2)
     # manually enumerate epochs

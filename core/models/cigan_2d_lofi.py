@@ -151,29 +151,50 @@ def make_generator_model(latent_dim):
 
 def make_discriminator_model():
     model = Sequential()
-
-    model.add(layers.Conv2D(64, (1, 1), padding="same", input_shape=[STFT_SIZE, STFT_SIZE, 3]))
-    model.add(layers.LeakyReLU())
-    model.add(layers.Dropout(0.2))
-
-    model.add(layers.Conv2D(64, (26, 26), strides=(13, 13), padding="same"))
-    model.add(layers.LeakyReLU())
-    model.add(layers.Dropout(0.2))
-
-    model.add(layers.Conv2D(128, (4, 4), strides=(2, 2), padding="same"))
-    model.add(layers.LeakyReLU())
-    model.add(layers.Dropout(0.2))
-
-    model.add(layers.Conv2D(64, (3, 3), strides=(3, 3), padding="same"))
-    model.add(layers.LeakyReLU())
-    model.add(layers.Dropout(0.2))
-
+    # normal
+    model.add(layers.Conv2D(64, (3,3), padding='same', input_shape=[STFT_SIZE, STFT_SIZE, 3]))
+    model.add(layers.LeakyReLU(alpha=0.2))
+    # downsample
+    model.add(layers.Conv2D(128, (3,3), strides=(2,2), padding='same'))
+    model.add(layers.LeakyReLU(alpha=0.2))
+    model.add(layers.Dropout(0.4))
+    # downsample
+    model.add(layers.Conv2D(256, (3,3), strides=(2,2), padding='same'))
+    model.add(layers.LeakyReLU(alpha=0.2))
+    model.add(layers.Dropout(0.4))
+    # classifier
     model.add(layers.Flatten())
-    model.add(layers.Dense(1, activation="sigmoid"))
-
-    opt = Adam(learning_rate=0.0001, beta_1=0.5)
-    model.compile(loss="binary_crossentropy", optimizer=opt, metrics=["accuracy"])
+    model.add(layers.Dropout(0.4))
+    model.add(layers.Dense(1, activation='sigmoid'))
+    # compile model
+    opt = Adam(lr=0.0002, beta_1=0.5)
+    model.compile(loss='binary_crossentropy', optimizer=opt, metrics=['accuracy'])
     return model
+    
+    # model = Sequential()
+
+    # model.add(layers.Conv2D(64, (1, 1), padding="same", input_shape=[STFT_SIZE, STFT_SIZE, 3]))
+    # model.add(layers.LeakyReLU())
+    # model.add(layers.Dropout(0.2))
+
+    # model.add(layers.Conv2D(64, (26, 26), strides=(13, 13), padding="same"))
+    # model.add(layers.LeakyReLU())
+    # model.add(layers.Dropout(0.2))
+
+    # model.add(layers.Conv2D(128, (4, 4), strides=(2, 2), padding="same"))
+    # model.add(layers.LeakyReLU())
+    # model.add(layers.Dropout(0.2))
+
+    # model.add(layers.Conv2D(64, (3, 3), strides=(3, 3), padding="same"))
+    # model.add(layers.LeakyReLU())
+    # model.add(layers.Dropout(0.2))
+
+    # model.add(layers.Flatten())
+    # model.add(layers.Dense(1, activation="sigmoid"))
+
+    # opt = Adam(learning_rate=0.002, beta_1=0.5)
+    # model.compile(loss="binary_crossentropy", optimizer=opt, metrics=["accuracy"])
+    # return model
 
 
 # define the combined generator and discriminator model, for updating the generator
@@ -197,7 +218,7 @@ def load_real_samples(arr_len=10000):
         keys = f["keys"][:arr_len]
         labels = f["labels"][:arr_len]
         data = f["data"][:arr_len]
-        return data, keys, labels
+        return data.astype(np.float32), keys, labels
 
 def load_validation_samples(n_samples):
     with h5py.File("data/stead_test_100_hz.hdf5", "r") as f:
@@ -208,7 +229,7 @@ def load_validation_samples(n_samples):
 
 def generate_validation_samples(n_samples):
     dataset, keys, labels = load_validation_samples(n_samples)
-    return dataset, keys, np.expand_dims(labels, axis=1)
+    return dataset.astype(np.float32), keys, np.expand_dims(labels, axis=1)
 
 
 # select real samples
@@ -225,7 +246,8 @@ def generate_real_samples(dataset, n_samples):
 # generate points in latent space as input for the generator
 def generate_latent_points(latent_dim, n_samples):
     # Generate latent space points; we multiply by 2 due to complex number data type
-    x_input = randn(2 * latent_dim * n_samples).view(np.complex128)
+    # x_input = 100 * randn(2 * latent_dim * n_samples).view(np.complex128)
+    x_input = randn(latent_dim * n_samples)
     # reshape into a batch of inputs for the network
     x_input = x_input.reshape(n_samples, latent_dim)
     return x_input
@@ -308,7 +330,7 @@ def train(g_model, d_model, gan_model, dataset, latent_dim, n_epochs=50, n_batch
             summarize_performance(i, g_model, d_model, dataset, latent_dim)
 
 
-X_VALID, KEYS_VALID, Y_VALID = generate_validation_samples(1000)
+X_VALID, KEYS_VALID, Y_VALID = generate_validation_samples(100)
 # size of the latent space
 latent_dim = 100
 # create the discriminator

@@ -20,10 +20,10 @@ from scipy.signal import spectrogram, stft, istft
 
 
 # Define the constants
-FS = 100
-NPERSEG = 155
-SAMPLES = 6000
-STFT_SIZE = 78
+FS = 66
+NPERSEG = 127
+SAMPLES = 4000
+STFT_SIZE = 64
 
 
 def plot_all(do, label, file_path=None):
@@ -112,34 +112,49 @@ def plot_all(do, label, file_path=None):
 
 def make_generator_model(latent_dim):
     model = Sequential()
-    model.add(layers.Dense(3 * 3 * 128, use_bias=False, input_shape=(latent_dim,)))
+    model.add(layers.Dense(4 * 4 * 128, use_bias=False, input_shape=(latent_dim,)))
     model.add(layers.BatchNormalization())
-    model.add(layers.LeakyReLU())
+    model.add(layers.LeakyReLU(alpha=0.2))
 
-    model.add(layers.Reshape((3, 3, 128)))
-
-    model.add(
-        layers.Conv2DTranspose(
-            64, (10, 10), strides=(2, 2), padding="same", use_bias=False
-        )
-    )
-    model.add(layers.BatchNormalization())
-    model.add(layers.LeakyReLU())
-    model.add(layers.Dropout(0.1))
+    model.add(layers.Reshape((4, 4, 128)))
 
     model.add(
         layers.Conv2DTranspose(
-            64, (26, 26), strides=(13, 13), padding="same", use_bias=False
+            128, (4, 4), strides=(2, 2), padding="same", use_bias=False
         )
     )
     model.add(layers.BatchNormalization())
-    model.add(layers.LeakyReLU())
-    model.add(layers.Dropout(0.1))
+    model.add(layers.LeakyReLU(alpha=0.2))
+
+    model.add(
+        layers.Conv2DTranspose(
+            128, (4, 4), strides=(2, 2), padding="same", use_bias=False
+        )
+    )
+    model.add(layers.BatchNormalization())
+    model.add(layers.LeakyReLU(alpha=0.2))
+
+    model.add(
+        layers.Conv2DTranspose(
+            32, (4, 4), strides=(2, 2), padding="same", use_bias=False
+        )
+    )
+    model.add(layers.BatchNormalization())
+    model.add(layers.LeakyReLU(alpha=0.2))
+
+    model.add(
+        layers.Conv2DTranspose(
+            32, (4, 4), strides=(2, 2), padding="same", use_bias=False
+        )
+    )
+    model.add(layers.BatchNormalization())
+    model.add(layers.LeakyReLU(alpha=0.2))
 
     model.add(
         layers.Conv2DTranspose(
             3,
             (3, 3),
+            strides=(1, 1),
             padding="same",
             use_bias=False,
             activation="linear",
@@ -152,26 +167,34 @@ def make_generator_model(latent_dim):
 def make_discriminator_model():
     model = Sequential()
 
-    model.add(layers.Conv2D(64, (1, 1), padding="same", input_shape=[STFT_SIZE, STFT_SIZE, 3]))
+    model.add(layers.Conv2D(64, (2, 2), padding="same", input_shape=[STFT_SIZE, STFT_SIZE, 3]))
     model.add(layers.LeakyReLU())
     model.add(layers.Dropout(0.2))
 
-    model.add(layers.Conv2D(64, (26, 26), strides=(13, 13), padding="same"))
+    model.add(layers.Conv2D(128, (8, 8), strides=(16, 16), padding="same"))
     model.add(layers.LeakyReLU())
     model.add(layers.Dropout(0.2))
 
-    model.add(layers.Conv2D(128, (4, 4), strides=(2, 2), padding="same"))
+    model.add(layers.Conv2D(64, (2, 2), strides=(4, 4), padding="same"))
     model.add(layers.LeakyReLU())
     model.add(layers.Dropout(0.2))
-
-    model.add(layers.Conv2D(64, (3, 3), strides=(3, 3), padding="same"))
-    model.add(layers.LeakyReLU())
-    model.add(layers.Dropout(0.2))
+    
+    # model.add(layers.Conv2D(64, (2, 2), strides=(2, 2), padding="same"))
+    # model.add(layers.LeakyReLU())
+    # model.add(layers.Dropout(0.2))
+    
+    # model.add(layers.Conv2D(64, (2, 2), strides=(2, 2), padding="same"))
+    # model.add(layers.LeakyReLU())
+    # model.add(layers.Dropout(0.2))
+    
+    # model.add(layers.Conv2D(64, (2, 2), strides=(2, 2), padding="same"))
+    # model.add(layers.LeakyReLU())
+    # model.add(layers.Dropout(0.2))
 
     model.add(layers.Flatten())
     model.add(layers.Dense(1, activation="sigmoid"))
 
-    opt = Adam(learning_rate=0.0001, beta_1=0.5)
+    opt = Adam(learning_rate=0.0002, beta_1=0.5)
     model.compile(loss="binary_crossentropy", optimizer=opt, metrics=["accuracy"])
     return model
 
@@ -187,20 +210,21 @@ def define_gan(g_model, d_model):
     # add the discriminator
     model.add(d_model)
     # compile model
-    opt = Adam(learning_rate=0.0002, beta_1=0.5)
+    # opt = Adam(learning_rate=0.0000001, beta_1=0.5)
+    opt = Adam(learning_rate=0)
     model.compile(loss="binary_crossentropy", optimizer=opt)
     return model
 
 
 def load_real_samples(arr_len=10000):
-    with h5py.File("data/stead_learn_100_hz.hdf5", "r") as f:
+    with h5py.File("data/stead_learn_66_hz.hdf5", "r") as f:
         keys = f["keys"][:arr_len]
         labels = f["labels"][:arr_len]
         data = f["data"][:arr_len]
         return data, keys, labels
 
 def load_validation_samples(n_samples):
-    with h5py.File("data/stead_test_100_hz.hdf5", "r") as f:
+    with h5py.File("data/stead_test_66_hz.hdf5", "r") as f:
         keys = f["keys"][:n_samples]
         labels = f["labels"][:n_samples]
         data = f["data"][:n_samples]
@@ -225,7 +249,7 @@ def generate_real_samples(dataset, n_samples):
 # generate points in latent space as input for the generator
 def generate_latent_points(latent_dim, n_samples):
     # Generate latent space points; we multiply by 2 due to complex number data type
-    x_input = randn(2 * latent_dim * n_samples).view(np.complex128)
+    x_input = 100 * randn(2 * latent_dim * n_samples).view(np.complex128)
     # reshape into a batch of inputs for the network
     x_input = x_input.reshape(n_samples, latent_dim)
     return x_input
@@ -278,7 +302,7 @@ def summarize_performance(epoch, g_model, d_model, dataset, latent_dim, n_sample
 
 
 # train the generator and discriminator
-def train(g_model, d_model, gan_model, dataset, latent_dim, n_epochs=50, n_batch=128):
+def train(g_model, d_model, gan_model, dataset, latent_dim, n_epochs=100, n_batch=128):
     bat_per_epo = int(dataset.shape[0] / n_batch)
     half_batch = int(n_batch / 2)
     # manually enumerate epochs
@@ -301,16 +325,16 @@ def train(g_model, d_model, gan_model, dataset, latent_dim, n_epochs=50, n_batch
             g_loss = gan_model.train_on_batch(X_gan, y_gan)
             # summarize loss on this batch
             logging.info(
-                f"Epoch {i + 1}, batch {j + 1}/{bat_per_epo}, {d_loss1=}, {d_loss2=}, {g_loss=}"
+                f"Epoch {i + 1}, batch {j + 1}/{bat_per_epo}, {d_loss1=}, {d_loss2=}, {g_loss=}, validation={d_model.evaluate(X_VALID, Y_VALID, verbose=0)[1]*100}"
             )
         # evaluate the model performance, sometimes
         if (i + 1) % 5 == 0:
             summarize_performance(i, g_model, d_model, dataset, latent_dim)
 
 
-X_VALID, KEYS_VALID, Y_VALID = generate_validation_samples(1000)
+X_VALID, KEYS_VALID, Y_VALID = generate_validation_samples(100)
 # size of the latent space
-latent_dim = 100
+latent_dim = 50
 # create the discriminator
 d_model = make_discriminator_model()
 # create the generator
