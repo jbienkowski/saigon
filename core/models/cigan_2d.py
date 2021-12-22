@@ -156,17 +156,17 @@ def make_discriminator_model():
     model.add(layers.LeakyReLU())
     model.add(layers.Dropout(0.2))
 
-    model.add(layers.Conv2D(64, (26, 26), strides=(13, 13), padding="same"))
+    model.add(layers.Conv2D(128, (26, 26), strides=(13, 13), padding="same"))
     model.add(layers.LeakyReLU())
     model.add(layers.Dropout(0.2))
 
-    model.add(layers.Conv2D(128, (4, 4), strides=(2, 2), padding="same"))
+    model.add(layers.Conv2D(256, (4, 4), strides=(2, 2), padding="same"))
     model.add(layers.LeakyReLU())
     model.add(layers.Dropout(0.2))
 
-    model.add(layers.Conv2D(64, (3, 3), strides=(3, 3), padding="same"))
-    model.add(layers.LeakyReLU())
-    model.add(layers.Dropout(0.2))
+    # model.add(layers.Conv2D(64, (3, 3), strides=(3, 3), padding="same"))
+    # model.add(layers.LeakyReLU())
+    # model.add(layers.Dropout(0.2))
 
     model.add(layers.Flatten())
     model.add(layers.Dense(1, activation="sigmoid"))
@@ -193,14 +193,14 @@ def define_gan(g_model, d_model):
 
 
 def load_real_samples(arr_len=10000):
-    with h5py.File("data/stead_learn_100_hz.hdf5", "r") as f:
+    with h5py.File("data/stead_learn_stft.hdf5", "r") as f:
         keys = f["keys"][:arr_len]
         labels = f["labels"][:arr_len]
         data = f["data"][:arr_len]
         return data, keys, labels
 
 def load_validation_samples(n_samples):
-    with h5py.File("data/stead_test_100_hz.hdf5", "r") as f:
+    with h5py.File("data/stead_test_stft.hdf5", "r") as f:
         keys = f["keys"][:n_samples]
         labels = f["labels"][:n_samples]
         data = f["data"][:n_samples]

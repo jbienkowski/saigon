@@ -21,6 +21,9 @@ class SteadDataObject:
         else:
             return rotated[0]
 
+    def get_raw(self):
+        return self.data
+
     def get_components(self):
         rotated = np.rot90(self.data, k=1, axes=(0, 1))
         return rotated

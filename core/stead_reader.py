@@ -20,99 +20,122 @@ class SteadReader:
         keys_test = []
 
         df = pd.read_csv(self._cfg["stead_path_csv"])
-        df = df.sample(frac = 1)
+        df = df.sample(frac=1)
 
+        # df_eq = df[
+        #     (df.trace_category == "earthquake_local")
+        #     & (df.source_distance_km <= 50)
+        #     & (df.source_magnitude < 3.5)
+        # ]
+        # df_an = df[(df.trace_category == "noise")]
         df_eq = df[
             (df.trace_category == "earthquake_local")
-            & (df.source_distance_km <= 50)
-            & (df.source_magnitude < 3.5)
+            # & (df.source_distance_km <= 75)
+            & (df.source_latitude >= 30)
+            & (df.source_latitude <= 60)
+            & (df.source_longitude >= -15)
+            & (df.source_longitude <= 35)
         ]
-        df_an = df[(df.trace_category == "noise")]
+        df_an = df[
+            (df.trace_category == "noise")
+            & (df.receiver_latitude >= 30)
+            & (df.receiver_latitude <= 60)
+            & (df.receiver_longitude >= -15)
+            & (df.receiver_longitude <= 35)
+        ]
 
-        eq_list_learn = df_eq["trace_name"].to_list()[:100000]
-        eq_list_test = df_eq["trace_name"].to_list()[100000:150000]
-        an_list = df_an["trace_name"].to_list()[:50000]
+        eq_list_learn = df_eq["trace_name"].to_list()[:25000]
+        eq_list_test = df_eq["trace_name"].to_list()[25000:30000]
+        an_list = df_an["trace_name"].to_list()[:5000]
 
         for eq in eq_list_learn:
             keys_learn.append(eq)
-        
+
         for eq in eq_list_test:
             keys_test.append(eq)
 
         for an in an_list:
             keys_test.append(an)
-        
+
         random.shuffle(keys_learn)
         random.shuffle(keys_test)
 
         len_keys_learn = len(keys_learn)
         len_keys_test = len(keys_test)
 
-        with h5py.File(self._cfg["stead_learn_100hz"], "a") as f:
+        with h5py.File(self._cfg["stead_learn_raw"], "a") as f:
             f.create_dataset("keys", shape=(len_keys_learn,), dtype="S50")
-            f.create_dataset("data", shape=(len_keys_learn, 78, 78, 3), dtype="complex64")
+            f.create_dataset(
+                "data", shape=(len_keys_learn, 6000, 3), dtype="float32"
+            )
             f.create_dataset("labels", shape=(len_keys_learn,), dtype="i4")
 
         for event_idx, key in enumerate(keys_learn):
             if event_idx % 100 == 0:
                 print(f"{event_idx}/{len_keys_learn}")
             do = self.get_data_by_evi(key)
-            with h5py.File(self._cfg["stead_learn_100hz"], "a") as f:
-                f["keys"][event_idx] = bytes(
-                    key, encoding="utf-8"
+            with h5py.File(self._cfg["stead_learn_raw"], "a") as f:
+                f["keys"][event_idx] = bytes(key, encoding="utf-8")
+                f["labels"][event_idx] = (
+                    1 if do.trace_name.lower().endswith("ev") else 0
                 )
-                f["labels"][event_idx] = 1 if do.trace_name.lower().endswith("ev") else 0
-                c = do.get_components()
-                _, _, z0 = stft(c[0], window="hanning", fs=100, nperseg=155)
-                _, _, z1 = stft(c[1], window="hanning", fs=100, nperseg=155)
-                _, _, z2 = stft(c[2], window="hanning", fs=100, nperseg=155)
-                arr = np.array([z0, z1, z2])
-                arr_t = arr.transpose(1, 2, 0)
-                f["data"][event_idx] = arr_t
+                c = do.get_raw()
+                f["data"][event_idx] = c
 
-        with h5py.File(self._cfg["stead_test_100hz"], "a") as f:
+        with h5py.File(self._cfg["stead_test_raw"], "a") as f:
             f.create_dataset("keys", shape=(len_keys_test,), dtype="S50")
-            f.create_dataset("data", shape=(len_keys_test, 78, 78, 3), dtype="complex64")
+            f.create_dataset(
+                "data", shape=(len_keys_test, 6000, 3), dtype="float32"
+            )
             f.create_dataset("labels", shape=(len_keys_test,), dtype="i4")
 
         for event_idx, key in enumerate(keys_test):
             if event_idx % 100 == 0:
                 print(f"{event_idx}/{len_keys_test}")
             do = self.get_data_by_evi(key)
-            with h5py.File(self._cfg["stead_test_100hz"], "a") as f:
-                f["keys"][event_idx] = bytes(
-                    key, encoding="utf-8"
+            with h5py.File(self._cfg["stead_test_raw"], "a") as f:
+                f["keys"][event_idx] = bytes(key, encoding="utf-8")
+                f["labels"][event_idx] = (
+                    1 if do.trace_name.lower().endswith("ev") else 0
                 )
-                f["labels"][event_idx] = 1 if do.trace_name.lower().endswith("ev") else 0
-                c = do.get_components()
-                _, _, z0 = stft(c[0], window="hanning", fs=100, nperseg=155)
-                _, _, z1 = stft(c[1], window="hanning", fs=100, nperseg=155)
-                _, _, z2 = stft(c[2], window="hanning", fs=100, nperseg=155)
-                arr = np.array([z0, z1, z2])
-                arr_t = arr.transpose(1, 2, 0)
-                f["data"][event_idx] = arr_t
+                c = do.get_raw()
+                f["data"][event_idx] = c
 
     def prepare_datasets_case_two(self):
         keys_learn = []
         keys_test = []
 
         df = pd.read_csv(self._cfg["stead_path_csv"])
-        df = df.sample(frac = 1)
+        df = df.sample(frac=1)
 
+        # df_eq = df[
+        #     (df.trace_category == "earthquake_local")
+        #     & (df.source_distance_km <= 50)
+        #     & (df.source_magnitude < 3.5)
+        # ]
         df_eq = df[
             (df.trace_category == "earthquake_local")
-            & (df.source_distance_km <= 50)
-            & (df.source_magnitude < 3.5)
+            # & (df.source_distance_km <= 75)
+            & (df.source_latitude >= 30)
+            & (df.source_latitude <= 60)
+            & (df.source_longitude >= -15)
+            & (df.source_longitude <= 35)
         ]
-        df_an = df[(df.trace_category == "noise")]
+        df_an = df[
+            (df.trace_category == "noise")
+            & (df.receiver_latitude >= 30)
+            & (df.receiver_latitude <= 60)
+            & (df.receiver_longitude >= -15)
+            & (df.receiver_longitude <= 35)
+        ]
 
-        eq_list_learn = df_eq["trace_name"].to_list()[:100000]
-        eq_list_test = df_eq["trace_name"].to_list()[100000:150000]
-        an_list = df_an["trace_name"].to_list()[:50000]
+        eq_list_learn = df_eq["trace_name"].to_list()[:25000]
+        eq_list_test = df_eq["trace_name"].to_list()[25000:30000]
+        an_list = df_an["trace_name"].to_list()[:5000]
 
         for eq in eq_list_learn:
             keys_learn.append(eq)
-        
+
         for eq in eq_list_test:
             keys_test.append(eq)
 
@@ -125,51 +148,54 @@ class SteadReader:
         len_keys_learn = len(keys_learn)
         len_keys_test = len(keys_test)
 
-        with h5py.File(self._cfg["stead_learn_66hz"], "a") as f:
+        with h5py.File(self._cfg["stead_learn_stft"], "a") as f:
             f.create_dataset("keys", shape=(len_keys_learn,), dtype="S50")
-            f.create_dataset("data", shape=(len_keys_learn, 64, 64, 3), dtype="complex64")
+            f.create_dataset(
+                "data", shape=(len_keys_learn, 78, 78, 3), dtype="float32"
+            )
             f.create_dataset("labels", shape=(len_keys_learn,), dtype="i4")
 
         for event_idx, key in enumerate(keys_learn):
             if event_idx % 100 == 0:
                 print(f"{event_idx}/{len_keys_learn}")
             do = self.get_data_by_evi(key)
-            with h5py.File(self._cfg["stead_learn_66hz"], "a") as f:
-                f["keys"][event_idx] = bytes(
-                    key, encoding="utf-8"
+            with h5py.File(self._cfg["stead_learn_stft"], "a") as f:
+                f["keys"][event_idx] = bytes(key, encoding="utf-8")
+                f["labels"][event_idx] = (
+                    1 if do.trace_name.lower().endswith("ev") else 0
                 )
-                f["labels"][event_idx] = 1 if do.trace_name.lower().endswith("ev") else 0
                 c = do.get_components()
-                _, _, z0 = stft(resample(c[0], 4000), window="hanning", fs=66, nperseg=127, return_onesided=True)
-                _, _, z1 = stft(resample(c[1], 4000), window="hanning", fs=66, nperseg=127, return_onesided=True)
-                _, _, z2 = stft(resample(c[2], 4000), window="hanning", fs=66, nperseg=127, return_onesided=True)
-                arr = np.array([z0, z1, z2])
+                _, _, z0 = stft(c[0], window="hanning", fs=100, nperseg=155)
+                _, _, z1 = stft(c[1], window="hanning", fs=100, nperseg=155)
+                _, _, z2 = stft(c[2], window="hanning", fs=100, nperseg=155)
+                arr = np.abs(np.array([z0, z1, z2]))
                 arr_t = arr.transpose(1, 2, 0)
                 f["data"][event_idx] = arr_t
-        
-        with h5py.File(self._cfg["stead_test_66hz"], "a") as f:
+
+        with h5py.File(self._cfg["stead_test_stft"], "a") as f:
             f.create_dataset("keys", shape=(len_keys_test,), dtype="S50")
-            f.create_dataset("data", shape=(len_keys_test, 64, 64, 3), dtype="complex64")
+            f.create_dataset(
+                "data", shape=(len_keys_test, 78, 78, 3), dtype="float32"
+            )
             f.create_dataset("labels", shape=(len_keys_test,), dtype="i4")
 
         for event_idx, key in enumerate(keys_test):
             if event_idx % 100 == 0:
                 print(f"{event_idx}/{len_keys_test}")
             do = self.get_data_by_evi(key)
-            with h5py.File(self._cfg["stead_test_66hz"], "a") as f:
-                f["keys"][event_idx] = bytes(
-                    key, encoding="utf-8"
+            with h5py.File(self._cfg["stead_test_stft"], "a") as f:
+                f["keys"][event_idx] = bytes(key, encoding="utf-8")
+                f["labels"][event_idx] = (
+                    1 if do.trace_name.lower().endswith("ev") else 0
                 )
-                f["labels"][event_idx] = 1 if do.trace_name.lower().endswith("ev") else 0
                 c = do.get_components()
-                _, _, z0 = stft(resample(c[0], 4000), window="hanning", fs=66, nperseg=127)
-                _, _, z1 = stft(resample(c[1], 4000), window="hanning", fs=66, nperseg=127)
-                _, _, z2 = stft(resample(c[2], 4000), window="hanning", fs=66, nperseg=127)
-                arr = np.array([z0, z1, z2])
+                _, _, z0 = stft(c[0], window="hanning", fs=100, nperseg=155)
+                _, _, z1 = stft(c[1], window="hanning", fs=100, nperseg=155)
+                _, _, z2 = stft(c[2], window="hanning", fs=100, nperseg=155)
+                arr = np.abs(np.array([z0, z1, z2]))
                 arr_t = arr.transpose(1, 2, 0)
                 f["data"][event_idx] = arr_t
 
-    
     def get_processed_data(self, idx_start, idx_end, idx_slice):
         x_train = None
         y_train = None
@@ -191,7 +217,7 @@ class SteadReader:
     def get_event_data(self, idx_start, idx_end):
         streams = []
         df = pd.read_csv(self._cfg["stead_path_csv"])
-        df = df.sample(frac = 1)
+        df = df.sample(frac=1)
         df = df[
             (df.trace_category == "earthquake_local")
             & (df.source_distance_km <= 50)
@@ -290,7 +316,7 @@ class SteadReader:
 
     def prepare_stft_data(self):
         df = pd.read_csv(self._cfg["stead_path_csv"])
-        df = df.sample(frac = 1)
+        df = df.sample(frac=1)
 
         df_eq = df[
             (df.trace_category == "earthquake_local")
@@ -313,7 +339,9 @@ class SteadReader:
             if event_idx % 100 == 0:
                 print(f"{event_idx}/{len_events}")
             do = self.get_data_by_evi(key)
-            with h5py.File(self._cfg["stead_path_db_processed_stft_microseism"], "a") as f:
+            with h5py.File(
+                self._cfg["stead_path_db_processed_stft_microseism"], "a"
+            ) as f:
                 components = do.get_components()
                 for component_idx, c in enumerate(components):
                     _, _, Zxx = stft(c, window="hanning", fs=100, nperseg=155)
@@ -329,7 +357,7 @@ class SteadReader:
 
     def prepare_stft_data_64(self):
         df = pd.read_csv(self._cfg["stead_path_csv"])
-        df = df.sample(frac = 1)
+        df = df.sample(frac=1)
 
         df_eq = df[
             (df.trace_category == "earthquake_local")
@@ -356,7 +384,9 @@ class SteadReader:
                 components = do.get_components()
                 for component_idx, c in enumerate(components):
                     c_downsampled = resample(c, 4000)
-                    _, _, Zxx = stft(c_downsampled, window="hanning", fs=66, nperseg=127)
+                    _, _, Zxx = stft(
+                        c_downsampled, window="hanning", fs=66, nperseg=127
+                    )
                     f["keys"][COMP_QTY * event_idx + component_idx] = bytes(
                         key, encoding="utf-8"
                     )
