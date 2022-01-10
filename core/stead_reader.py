@@ -66,7 +66,7 @@ class SteadReader:
         with h5py.File(self._cfg["stead_learn_raw"], "a") as f:
             f.create_dataset("keys", shape=(len_keys_learn,), dtype="S50")
             f.create_dataset(
-                "data", shape=(len_keys_learn, 6000, 3), dtype="float32"
+                "data", shape=(len_keys_learn, 6000, 3, 1), dtype="float32"
             )
             f.create_dataset("labels", shape=(len_keys_learn,), dtype="i4")
 
@@ -85,7 +85,7 @@ class SteadReader:
         with h5py.File(self._cfg["stead_test_raw"], "a") as f:
             f.create_dataset("keys", shape=(len_keys_test,), dtype="S50")
             f.create_dataset(
-                "data", shape=(len_keys_test, 6000, 3), dtype="float32"
+                "data", shape=(len_keys_test, 6000, 3, 1), dtype="float32"
             )
             f.create_dataset("labels", shape=(len_keys_test,), dtype="i4")
 

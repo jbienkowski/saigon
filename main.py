@@ -5,7 +5,6 @@ from logging.handlers import RotatingFileHandler
 
 from core.stead_reader import SteadReader
 from core.stead_plotter import SteadPlotter
-from core.models.gan64 import GAN
 
 from core.gan_plotter import GANPlotter
 
@@ -21,8 +20,8 @@ logging.basicConfig(
 )
 
 
-# from core.models import cigan_2d
-from core.models import classificator
+# from core.models import experiment_1
+# from core.models import classificator
 
 
 def plot_examples(cfg, quantity):
@@ -59,8 +58,8 @@ if __name__ == "__main__":
         cfg = json.load(f)
 
     # mt = ModelTester(cfg)
-    # sr = SteadReader(cfg)
-    # sr.prepare_datasets_case_one()
+    sr = SteadReader(cfg)
+    sr.prepare_datasets_case_one()
     # sr.prepare_datasets_case_two()
 
     # m = GAN(cfg)
