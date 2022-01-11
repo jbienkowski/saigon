@@ -131,7 +131,7 @@ def make_generator_model(latent_dim):
 
     model.add(
         layers.Conv2DTranspose(
-            64, (20, 20), strides=(10, 1), padding="same", use_bias=False
+            64, (20, 2), strides=(10, 1), padding="same", use_bias=False
         )
     )
     model.add(layers.BatchNormalization())
@@ -140,7 +140,7 @@ def make_generator_model(latent_dim):
 
     model.add(
         layers.Conv2DTranspose(
-            64, (20, 20), strides=(10, 1), padding="same", use_bias=False
+            64, (20, 2), strides=(10, 1), padding="same", use_bias=False
         )
     )
     model.add(layers.BatchNormalization())
@@ -149,7 +149,7 @@ def make_generator_model(latent_dim):
 
     model.add(
         layers.Conv2DTranspose(
-            64, (20, 20), strides=(15, 1), padding="same", use_bias=False
+            64, (30, 6), strides=(15, 1), padding="same", use_bias=False
         )
     )
     model.add(layers.BatchNormalization())
@@ -158,7 +158,7 @@ def make_generator_model(latent_dim):
 
     model.add(
         layers.Conv2DTranspose(
-            64, (8, 8), strides=(4, 1), padding="same", use_bias=False
+            64, (8, 2), strides=(4, 1), padding="same", use_bias=False
         )
     )
     model.add(layers.BatchNormalization())
@@ -355,6 +355,6 @@ g_model = make_generator_model(latent_dim)
 # create the gan
 gan_model = define_gan(g_model, d_model)
 # load image data
-dataset, _, _ = load_real_samples()
+dataset, _, _ = load_real_samples(arr_len=2000)
 # train model
 train(g_model, d_model, gan_model, dataset, latent_dim)
