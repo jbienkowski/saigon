@@ -28,6 +28,7 @@ STFT_SIZE = 78
 
 def plot_all(do, label, file_path=None):
     do = np.rot90(do, k=1, axes=(0, 1))
+    do = do.reshape(3, 6000)
     d0 = pd.DataFrame(data=do[0][:SAMPLES])
     d1 = pd.DataFrame(data=do[1][:SAMPLES])
     d2 = pd.DataFrame(data=do[2][:SAMPLES])
