@@ -122,7 +122,7 @@ def make_generator_model(latent_dim):
 
     model.add(
         layers.Conv2DTranspose(
-            64, (10, 10), strides=(1, 1), padding="same", use_bias=False
+            32, (10, 10), strides=(1, 1), padding="same", use_bias=False
         )
     )
     model.add(layers.BatchNormalization())
@@ -131,7 +131,7 @@ def make_generator_model(latent_dim):
 
     model.add(
         layers.Conv2DTranspose(
-            64, (20, 2), strides=(10, 1), padding="same", use_bias=False
+            32, (20, 2), strides=(10, 1), padding="same", use_bias=False
         )
     )
     model.add(layers.BatchNormalization())
@@ -140,7 +140,7 @@ def make_generator_model(latent_dim):
 
     model.add(
         layers.Conv2DTranspose(
-            64, (20, 2), strides=(10, 1), padding="same", use_bias=False
+            32, (20, 2), strides=(10, 1), padding="same", use_bias=False
         )
     )
     model.add(layers.BatchNormalization())
@@ -149,7 +149,7 @@ def make_generator_model(latent_dim):
 
     model.add(
         layers.Conv2DTranspose(
-            64, (30, 6), strides=(15, 1), padding="same", use_bias=False
+            32, (30, 2), strides=(15, 1), padding="same", use_bias=False
         )
     )
     model.add(layers.BatchNormalization())
@@ -158,7 +158,7 @@ def make_generator_model(latent_dim):
 
     model.add(
         layers.Conv2DTranspose(
-            64, (8, 2), strides=(4, 1), padding="same", use_bias=False
+            32, (8, 2), strides=(4, 1), padding="same", use_bias=False
         )
     )
     model.add(layers.BatchNormalization())
@@ -181,27 +181,27 @@ def make_generator_model(latent_dim):
 def make_discriminator_model():
     model = Sequential()
 
-    model.add(layers.Conv2D(64, (1, 1), padding="same", input_shape=[6000, 3, 1]))
+    model.add(layers.Conv2D(32, (1, 1), padding="same", input_shape=[6000, 3, 1]))
     model.add(layers.LeakyReLU())
     model.add(layers.Dropout(0.2))
 
-    model.add(layers.Conv2D(64, (20, 20), strides=(10, 1), padding="same"))
+    model.add(layers.Conv2D(32, (20, 20), strides=(10, 1), padding="same"))
     model.add(layers.LeakyReLU())
     model.add(layers.Dropout(0.2))
 
-    model.add(layers.Conv2D(64, (10, 10), strides=(5, 1), padding="same"))
+    model.add(layers.Conv2D(32, (10, 10), strides=(5, 1), padding="same"))
     model.add(layers.LeakyReLU())
     model.add(layers.Dropout(0.2))
 
-    model.add(layers.Conv2D(64, (12, 12), strides=(6, 1), padding="same"))
+    model.add(layers.Conv2D(32, (12, 12), strides=(6, 3), padding="same"))
     model.add(layers.LeakyReLU())
     model.add(layers.Dropout(0.2))
 
-    model.add(layers.Conv2D(64, (10, 10), strides=(5, 1), padding="same"))
+    model.add(layers.Conv2D(32, (10, 10), strides=(5, 1), padding="same"))
     model.add(layers.LeakyReLU())
     model.add(layers.Dropout(0.2))
 
-    model.add(layers.Conv2D(64, (8, 6), strides=(4, 3), padding="same"))
+    model.add(layers.Conv2D(32, (8, 8), strides=(4, 1), padding="same"))
     model.add(layers.LeakyReLU())
     model.add(layers.Dropout(0.2))
 
@@ -315,7 +315,7 @@ def summarize_performance(epoch, g_model, d_model, dataset, latent_dim, n_sample
 
 
 # train the generator and discriminator
-def train(g_model, d_model, gan_model, dataset, latent_dim, n_epochs=50, n_batch=32):
+def train(g_model, d_model, gan_model, dataset, latent_dim, n_epochs=50, n_batch=64):
     bat_per_epo = int(dataset.shape[0] / n_batch)
     half_batch = int(n_batch / 2)
     # manually enumerate epochs
@@ -355,6 +355,6 @@ g_model = make_generator_model(latent_dim)
 # create the gan
 gan_model = define_gan(g_model, d_model)
 # load image data
-dataset, _, _ = load_real_samples(arr_len=2000)
+dataset, _, _ = load_real_samples(arr_len=5000)
 # train model
 train(g_model, d_model, gan_model, dataset, latent_dim)
