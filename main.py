@@ -58,7 +58,7 @@ if __name__ == "__main__":
         cfg = json.load(f)
 
     # mt = ModelTester(cfg)
-    sr = SteadReader(cfg)
+    # sr = SteadReader(cfg)
     # sr.prepare_datasets_case_one()
     # sr.prepare_datasets_case_two()
 

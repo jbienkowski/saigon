@@ -114,11 +114,11 @@ def plot_all(do, label, file_path=None):
 
 def make_generator_model(latent_dim):
     model = Sequential()
-    model.add(layers.Dense(1 * 3 * 128, use_bias=False, input_shape=(latent_dim,)))
+    model.add(layers.Dense(1 * 3 * 32, use_bias=False, input_shape=(latent_dim,)))
     model.add(layers.BatchNormalization())
     model.add(layers.LeakyReLU())
 
-    model.add(layers.Reshape((1, 3, 128)))
+    model.add(layers.Reshape((1, 3, 32)))
 
     model.add(
         layers.Conv2DTranspose(
@@ -315,7 +315,7 @@ def summarize_performance(epoch, g_model, d_model, dataset, latent_dim, n_sample
 
 
 # train the generator and discriminator
-def train(g_model, d_model, gan_model, dataset, latent_dim, n_epochs=50, n_batch=64):
+def train(g_model, d_model, gan_model, dataset, latent_dim, n_epochs=50, n_batch=128):
     bat_per_epo = int(dataset.shape[0] / n_batch)
     half_batch = int(n_batch / 2)
     # manually enumerate epochs
@@ -341,7 +341,7 @@ def train(g_model, d_model, gan_model, dataset, latent_dim, n_epochs=50, n_batch
                 f"Epoch {i + 1}, batch {j + 1}/{bat_per_epo}, {d_loss1=}, {d_loss2=}, {g_loss=}"
             )
         # evaluate the model performance, sometimes
-        if (i + 1) % 5 == 0:
+        if (i + 1) % 2 == 0:
             summarize_performance(i, g_model, d_model, dataset, latent_dim)
 
 
@@ -355,6 +355,6 @@ g_model = make_generator_model(latent_dim)
 # create the gan
 gan_model = define_gan(g_model, d_model)
 # load image data
-dataset, _, _ = load_real_samples(arr_len=5000)
+dataset, _, _ = load_real_samples(arr_len=10000)
 # train model
 train(g_model, d_model, gan_model, dataset, latent_dim)
