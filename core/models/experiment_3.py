@@ -20,15 +20,13 @@ from scipy.signal import spectrogram, stft, istft
 
 
 # Define the constants
-FS = 100
-NPERSEG = 155
-SAMPLES = 6000
-STFT_SIZE = 78
+FS = 66
+NPERSEG = 127
+SAMPLES = 4000
+STFT_SIZE = 64
 
 
 def plot_all(do, label, file_path=None):
-    do = np.rot90(do, k=1, axes=(0, 1))
-    do = do.reshape(3, 6000)
     d0 = pd.DataFrame(data=do[0][:SAMPLES])
     d1 = pd.DataFrame(data=do[1][:SAMPLES])
     d2 = pd.DataFrame(data=do[2][:SAMPLES])
@@ -114,15 +112,15 @@ def plot_all(do, label, file_path=None):
 
 def make_generator_model(latent_dim):
     model = Sequential()
-    model.add(layers.Dense(1 * 3 * 32, use_bias=False, input_shape=(latent_dim,)))
+    model.add(layers.Dense(2 * 2 * 256, use_bias=False, input_shape=(latent_dim,)))
     model.add(layers.BatchNormalization())
     model.add(layers.LeakyReLU())
 
-    model.add(layers.Reshape((1, 3, 32)))
+    model.add(layers.Reshape((2, 2, 256)))
 
     model.add(
         layers.Conv2DTranspose(
-            32, (10, 10), strides=(1, 1), padding="same", use_bias=False
+            32, (20, 20), strides=(2, 2), padding="same", use_bias=False
         )
     )
     model.add(layers.BatchNormalization())
@@ -131,7 +129,7 @@ def make_generator_model(latent_dim):
 
     model.add(
         layers.Conv2DTranspose(
-            32, (20, 2), strides=(10, 1), padding="same", use_bias=False
+            32, (4, 4), strides=(2, 2), padding="same", use_bias=False
         )
     )
     model.add(layers.BatchNormalization())
@@ -140,7 +138,7 @@ def make_generator_model(latent_dim):
 
     model.add(
         layers.Conv2DTranspose(
-            32, (20, 2), strides=(10, 1), padding="same", use_bias=False
+            32, (4, 4), strides=(2, 2), padding="same", use_bias=False
         )
     )
     model.add(layers.BatchNormalization())
@@ -149,7 +147,7 @@ def make_generator_model(latent_dim):
 
     model.add(
         layers.Conv2DTranspose(
-            32, (30, 2), strides=(15, 1), padding="same", use_bias=False
+            32, (4, 4), strides=(2, 2), padding="same", use_bias=False
         )
     )
     model.add(layers.BatchNormalization())
@@ -158,7 +156,7 @@ def make_generator_model(latent_dim):
 
     model.add(
         layers.Conv2DTranspose(
-            32, (8, 2), strides=(4, 1), padding="same", use_bias=False
+            32, (4, 4), strides=(2, 2), padding="same", use_bias=False
         )
     )
     model.add(layers.BatchNormalization())
@@ -167,8 +165,8 @@ def make_generator_model(latent_dim):
 
     model.add(
         layers.Conv2DTranspose(
-            1,
-            (1, 1),
+            3,
+            (3, 3),
             padding="same",
             use_bias=False,
             activation="linear",
@@ -181,27 +179,27 @@ def make_generator_model(latent_dim):
 def make_discriminator_model():
     model = Sequential()
 
-    model.add(layers.Conv2D(32, (1, 1), padding="same", input_shape=[6000, 3, 1]))
+    model.add(layers.Conv2D(32, (1, 1), padding="same", input_shape=[STFT_SIZE, STFT_SIZE, 3]))
     model.add(layers.LeakyReLU())
     model.add(layers.Dropout(0.2))
 
-    model.add(layers.Conv2D(32, (20, 20), strides=(10, 1), padding="same"))
+    model.add(layers.Conv2D(32, (4, 4), strides=(2, 2), padding="same"))
     model.add(layers.LeakyReLU())
     model.add(layers.Dropout(0.2))
 
-    model.add(layers.Conv2D(32, (10, 10), strides=(5, 1), padding="same"))
+    model.add(layers.Conv2D(32, (4, 4), strides=(2, 2), padding="same"))
     model.add(layers.LeakyReLU())
     model.add(layers.Dropout(0.2))
 
-    model.add(layers.Conv2D(32, (12, 12), strides=(6, 3), padding="same"))
+    model.add(layers.Conv2D(32, (4, 4), strides=(2, 2), padding="same"))
     model.add(layers.LeakyReLU())
     model.add(layers.Dropout(0.2))
 
-    model.add(layers.Conv2D(32, (10, 10), strides=(5, 1), padding="same"))
+    model.add(layers.Conv2D(32, (4, 4), strides=(2, 2), padding="same"))
     model.add(layers.LeakyReLU())
     model.add(layers.Dropout(0.2))
 
-    model.add(layers.Conv2D(32, (8, 8), strides=(4, 1), padding="same"))
+    model.add(layers.Conv2D(32, (4, 4), strides=(2, 2), padding="same"))
     model.add(layers.LeakyReLU())
     model.add(layers.Dropout(0.2))
 
@@ -230,14 +228,14 @@ def define_gan(g_model, d_model):
 
 
 def load_real_samples(arr_len=10000):
-    with h5py.File("data/stead_learn_raw.hdf5", "r") as f:
+    with h5py.File("data/stead_learn_stft_64.hdf5", "r") as f:
         keys = f["keys"][:arr_len]
         labels = f["labels"][:arr_len]
         data = f["data"][:arr_len]
         return data, keys, labels
 
 def load_validation_samples(n_samples):
-    with h5py.File("data/stead_test_raw.hdf5", "r") as f:
+    with h5py.File("data/stead_test_stft_64.hdf5", "r") as f:
         keys = f["keys"][:n_samples]
         labels = f["labels"][:n_samples]
         data = f["data"][:n_samples]
@@ -284,7 +282,7 @@ def save_plot(examples, epoch):
     """Plot the examples."""
     for idx, _ in enumerate(examples[:5]):
         plot_all(
-            examples[idx],
+            istft(examples[idx].transpose(2, 0, 1), fs=FS, nperseg=NPERSEG)[1],
             f"GAN Event (epoch {epoch+1})",
             file_path=f"out/epoch_{epoch+1}_image_{idx}.png",
         )
@@ -347,7 +345,7 @@ def train(g_model, d_model, gan_model, dataset, latent_dim, n_epochs=50, n_batch
 
 X_VALID, KEYS_VALID, Y_VALID = generate_validation_samples(1000)
 # size of the latent space
-latent_dim = 100
+latent_dim = 512
 # create the discriminator
 d_model = make_discriminator_model()
 # create the generator
@@ -355,6 +353,6 @@ g_model = make_generator_model(latent_dim)
 # create the gan
 gan_model = define_gan(g_model, d_model)
 # load image data
-dataset, _, _ = load_real_samples(arr_len=10000)
+dataset, _, _ = load_real_samples()
 # train model
 train(g_model, d_model, gan_model, dataset, latent_dim)

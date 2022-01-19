@@ -196,6 +196,101 @@ class SteadReader:
                 arr_t = arr.transpose(1, 2, 0)
                 f["data"][event_idx] = arr_t
 
+    def prepare_datasets_case_three(self):
+        keys_learn = []
+        keys_test = []
+
+        df = pd.read_csv(self._cfg["stead_path_csv"])
+        df = df.sample(frac=1)
+
+        # df_eq = df[
+        #     (df.trace_category == "earthquake_local")
+        #     & (df.source_distance_km <= 50)
+        #     & (df.source_magnitude < 3.5)
+        # ]
+        df_eq = df[
+            (df.trace_category == "earthquake_local")
+            # & (df.source_distance_km <= 75)
+            & (df.source_latitude >= 30)
+            & (df.source_latitude <= 60)
+            & (df.source_longitude >= -15)
+            & (df.source_longitude <= 35)
+        ]
+        df_an = df[
+            (df.trace_category == "noise")
+            & (df.receiver_latitude >= 30)
+            & (df.receiver_latitude <= 60)
+            & (df.receiver_longitude >= -15)
+            & (df.receiver_longitude <= 35)
+        ]
+
+        eq_list_learn = df_eq["trace_name"].to_list()[:25000]
+        eq_list_test = df_eq["trace_name"].to_list()[25000:30000]
+        an_list = df_an["trace_name"].to_list()[:5000]
+
+        for eq in eq_list_learn:
+            keys_learn.append(eq)
+
+        for eq in eq_list_test:
+            keys_test.append(eq)
+
+        for an in an_list:
+            keys_test.append(an)
+
+        random.shuffle(keys_learn)
+        random.shuffle(keys_test)
+
+        len_keys_learn = len(keys_learn)
+        len_keys_test = len(keys_test)
+
+        with h5py.File(self._cfg["stead_learn_stft_64"], "a") as f:
+            f.create_dataset("keys", shape=(len_keys_learn,), dtype="S50")
+            f.create_dataset(
+                "data", shape=(len_keys_learn, 64, 64, 3), dtype="float32"
+            )
+            f.create_dataset("labels", shape=(len_keys_learn,), dtype="i4")
+
+        for event_idx, key in enumerate(keys_learn):
+            if event_idx % 100 == 0:
+                print(f"{event_idx}/{len_keys_learn}")
+            do = self.get_data_by_evi(key)
+            with h5py.File(self._cfg["stead_learn_stft_64"], "a") as f:
+                f["keys"][event_idx] = bytes(key, encoding="utf-8")
+                f["labels"][event_idx] = (
+                    1 if do.trace_name.lower().endswith("ev") else 0
+                )
+                c = do.get_components()
+                _, _, z0 = stft(resample(c[0], 4000), window="hanning", fs=66, nperseg=127)
+                _, _, z1 = stft(resample(c[1], 4000), window="hanning", fs=66, nperseg=127)
+                _, _, z2 = stft(resample(c[2], 4000), window="hanning", fs=66, nperseg=127)
+                arr = np.abs(np.array([z0, z1, z2]))
+                arr_t = arr.transpose(1, 2, 0)
+                f["data"][event_idx] = arr_t
+
+        with h5py.File(self._cfg["stead_test_stft_64"], "a") as f:
+            f.create_dataset("keys", shape=(len_keys_test,), dtype="S50")
+            f.create_dataset(
+                "data", shape=(len_keys_test, 64, 64, 3), dtype="float32"
+            )
+            f.create_dataset("labels", shape=(len_keys_test,), dtype="i4")
+
+        for event_idx, key in enumerate(keys_test):
+            if event_idx % 100 == 0:
+                print(f"{event_idx}/{len_keys_test}")
+            do = self.get_data_by_evi(key)
+            with h5py.File(self._cfg["stead_test_stft_64"], "a") as f:
+                f["keys"][event_idx] = bytes(key, encoding="utf-8")
+                f["labels"][event_idx] = (
+                    1 if do.trace_name.lower().endswith("ev") else 0
+                )
+                c = do.get_components()
+                _, _, z0 = stft(resample(c[0], 4000), window="hanning", fs=66, nperseg=127)
+                _, _, z1 = stft(resample(c[1], 4000), window="hanning", fs=66, nperseg=127)
+                _, _, z2 = stft(resample(c[2], 4000), window="hanning", fs=66, nperseg=127)
+                arr = np.abs(np.array([z0, z1, z2]))
+                arr_t = arr.transpose(1, 2, 0)
+                f["data"][event_idx] = arr_t
+
     def get_processed_data(self, idx_start, idx_end, idx_slice):
         x_train = None
         y_train = None

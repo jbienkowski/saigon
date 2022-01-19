@@ -20,7 +20,9 @@ logging.basicConfig(
 )
 
 
-from core.models import experiment_1
+# from core.models import experiment_1
+# from core.models import experiment_2
+from core.models import experiment_3
 # from core.models import classificator
 
 
@@ -61,6 +63,7 @@ if __name__ == "__main__":
     # sr = SteadReader(cfg)
     # sr.prepare_datasets_case_one()
     # sr.prepare_datasets_case_two()
+    # sr.prepare_datasets_case_three()
 
     # m = GAN(cfg)
     # m.run()

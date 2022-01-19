@@ -112,15 +112,15 @@ def plot_all(do, label, file_path=None):
 
 def make_generator_model(latent_dim):
     model = Sequential()
-    model.add(layers.Dense(3 * 3 * 128, use_bias=False, input_shape=(latent_dim,)))
+    model.add(layers.Dense(3 * 3 * 64, use_bias=False, input_shape=(latent_dim,)))
     model.add(layers.BatchNormalization())
     model.add(layers.LeakyReLU())
 
-    model.add(layers.Reshape((3, 3, 128)))
+    model.add(layers.Reshape((3, 3, 64)))
 
     model.add(
         layers.Conv2DTranspose(
-            64, (10, 10), strides=(2, 2), padding="same", use_bias=False
+            128, (39, 39), strides=(13, 13), padding="same", use_bias=False
         )
     )
     model.add(layers.BatchNormalization())
@@ -129,7 +129,7 @@ def make_generator_model(latent_dim):
 
     model.add(
         layers.Conv2DTranspose(
-            64, (26, 26), strides=(13, 13), padding="same", use_bias=False
+            128, (8, 8), strides=(2, 2), padding="same", use_bias=False
         )
     )
     model.add(layers.BatchNormalization())
@@ -152,7 +152,7 @@ def make_generator_model(latent_dim):
 def make_discriminator_model():
     model = Sequential()
 
-    model.add(layers.Conv2D(64, (1, 1), padding="same", input_shape=[STFT_SIZE, STFT_SIZE, 3]))
+    model.add(layers.Conv2D(32, (1, 1), padding="same", input_shape=[STFT_SIZE, STFT_SIZE, 3]))
     model.add(layers.LeakyReLU())
     model.add(layers.Dropout(0.2))
 
@@ -160,13 +160,13 @@ def make_discriminator_model():
     model.add(layers.LeakyReLU())
     model.add(layers.Dropout(0.2))
 
-    model.add(layers.Conv2D(256, (4, 4), strides=(2, 2), padding="same"))
+    model.add(layers.Conv2D(64, (4, 4), strides=(2, 2), padding="same"))
     model.add(layers.LeakyReLU())
     model.add(layers.Dropout(0.2))
 
-    # model.add(layers.Conv2D(64, (3, 3), strides=(3, 3), padding="same"))
-    # model.add(layers.LeakyReLU())
-    # model.add(layers.Dropout(0.2))
+    model.add(layers.Conv2D(32, (3, 3), strides=(3, 3), padding="same"))
+    model.add(layers.LeakyReLU())
+    model.add(layers.Dropout(0.2))
 
     model.add(layers.Flatten())
     model.add(layers.Dense(1, activation="sigmoid"))
@@ -271,7 +271,7 @@ def summarize_performance(epoch, g_model, d_model, dataset, latent_dim, n_sample
 
     save_plot(x_fake, epoch)
 
-    if (epoch + 1) % 10 == 0:
+    if (acc_valid > 0.9) or (epoch + 1) % 10 == 0:
         # save the generator model tile file
         g_model.save(f"out/gen-{epoch+1}")
         d_model.save(f"out/desc-{epoch+1}")
@@ -304,7 +304,7 @@ def train(g_model, d_model, gan_model, dataset, latent_dim, n_epochs=50, n_batch
                 f"Epoch {i + 1}, batch {j + 1}/{bat_per_epo}, {d_loss1=}, {d_loss2=}, {g_loss=}"
             )
         # evaluate the model performance, sometimes
-        if (i + 1) % 5 == 0:
+        if (i + 1) % 2 == 0:
             summarize_performance(i, g_model, d_model, dataset, latent_dim)
 
 
