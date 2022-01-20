@@ -20,10 +20,10 @@ from scipy.signal import spectrogram, stft, istft
 
 
 # Define the constants
-FS = 100
-NPERSEG = 155
-SAMPLES = 6000
-STFT_SIZE = 78
+FS = 66
+NPERSEG = 127
+SAMPLES = 4000
+STFT_SIZE = 64
 
 
 def plot_all(do, label, file_path=None):
@@ -112,15 +112,15 @@ def plot_all(do, label, file_path=None):
 
 def make_generator_model(latent_dim):
     model = Sequential()
-    model.add(layers.Dense(3 * 3 * 64, use_bias=False, input_shape=(latent_dim,)))
+    model.add(layers.Dense(2 * 2 * 256, use_bias=False, input_shape=(latent_dim,)))
     model.add(layers.BatchNormalization())
     model.add(layers.LeakyReLU())
 
-    model.add(layers.Reshape((3, 3, 64)))
+    model.add(layers.Reshape((2, 2, 256)))
 
     model.add(
         layers.Conv2DTranspose(
-            128, (39, 39), strides=(13, 13), padding="same", use_bias=False
+            32, (20, 20), strides=(2, 2), padding="same", use_bias=False
         )
     )
     model.add(layers.BatchNormalization())
@@ -129,7 +129,34 @@ def make_generator_model(latent_dim):
 
     model.add(
         layers.Conv2DTranspose(
-            128, (8, 8), strides=(2, 2), padding="same", use_bias=False
+            32, (4, 4), strides=(2, 2), padding="same", use_bias=False
+        )
+    )
+    model.add(layers.BatchNormalization())
+    model.add(layers.LeakyReLU())
+    model.add(layers.Dropout(0.1))
+
+    model.add(
+        layers.Conv2DTranspose(
+            32, (4, 4), strides=(2, 2), padding="same", use_bias=False
+        )
+    )
+    model.add(layers.BatchNormalization())
+    model.add(layers.LeakyReLU())
+    model.add(layers.Dropout(0.1))
+
+    model.add(
+        layers.Conv2DTranspose(
+            32, (4, 4), strides=(2, 2), padding="same", use_bias=False
+        )
+    )
+    model.add(layers.BatchNormalization())
+    model.add(layers.LeakyReLU())
+    model.add(layers.Dropout(0.1))
+
+    model.add(
+        layers.Conv2DTranspose(
+            32, (4, 4), strides=(2, 2), padding="same", use_bias=False
         )
     )
     model.add(layers.BatchNormalization())
@@ -156,15 +183,23 @@ def make_discriminator_model():
     model.add(layers.LeakyReLU())
     model.add(layers.Dropout(0.2))
 
-    model.add(layers.Conv2D(128, (26, 26), strides=(13, 13), padding="same"))
+    model.add(layers.Conv2D(32, (4, 4), strides=(2, 2), padding="same"))
     model.add(layers.LeakyReLU())
     model.add(layers.Dropout(0.2))
 
-    model.add(layers.Conv2D(64, (4, 4), strides=(2, 2), padding="same"))
+    model.add(layers.Conv2D(32, (4, 4), strides=(2, 2), padding="same"))
     model.add(layers.LeakyReLU())
     model.add(layers.Dropout(0.2))
 
-    model.add(layers.Conv2D(32, (3, 3), strides=(3, 3), padding="same"))
+    model.add(layers.Conv2D(32, (4, 4), strides=(2, 2), padding="same"))
+    model.add(layers.LeakyReLU())
+    model.add(layers.Dropout(0.2))
+
+    model.add(layers.Conv2D(32, (4, 4), strides=(2, 2), padding="same"))
+    model.add(layers.LeakyReLU())
+    model.add(layers.Dropout(0.2))
+
+    model.add(layers.Conv2D(32, (4, 4), strides=(2, 2), padding="same"))
     model.add(layers.LeakyReLU())
     model.add(layers.Dropout(0.2))
 
@@ -193,14 +228,14 @@ def define_gan(g_model, d_model):
 
 
 def load_real_samples(arr_len=10000):
-    with h5py.File("data/stead_learn_stft.hdf5", "r") as f:
+    with h5py.File("data/stead_learn_stft_64.hdf5", "r") as f:
         keys = f["keys"][:arr_len]
         labels = f["labels"][:arr_len]
         data = f["data"][:arr_len]
         return data, keys, labels
 
 def load_validation_samples(n_samples):
-    with h5py.File("data/stead_test_stft.hdf5", "r") as f:
+    with h5py.File("data/stead_test_stft_64.hdf5", "r") as f:
         keys = f["keys"][:n_samples]
         labels = f["labels"][:n_samples]
         data = f["data"][:n_samples]
@@ -310,7 +345,7 @@ def train(g_model, d_model, gan_model, dataset, latent_dim, n_epochs=50, n_batch
 
 X_VALID, KEYS_VALID, Y_VALID = generate_validation_samples(1000)
 # size of the latent space
-latent_dim = 100
+latent_dim = 512
 # create the discriminator
 d_model = make_discriminator_model()
 # create the generator

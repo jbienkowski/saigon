@@ -22,7 +22,7 @@ logging.basicConfig(
 
 # from core.models import experiment_1
 # from core.models import experiment_2
-from core.models import experiment_3
+# from core.models import experiment_3
 # from core.models import classificator
 
 
@@ -60,7 +60,10 @@ if __name__ == "__main__":
         cfg = json.load(f)
 
     # mt = ModelTester(cfg)
-    # sr = SteadReader(cfg)
+    sr = SteadReader(cfg)
+    do = sr.get_data_by_evi("GEMT.KO_20080224145722_EV")
+    sp = SteadPlotter()
+    sp.plot_all(do, "", "file.png")
     # sr.prepare_datasets_case_one()
     # sr.prepare_datasets_case_two()
     # sr.prepare_datasets_case_three()

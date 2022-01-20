@@ -1,6 +1,8 @@
 {
     "stead_path_csv": "/media/jarek/passport/db/STEAD.csv",
     "stead_path_db": "/media/jarek/passport/db/STEAD.hdf5",
+    "stead_learn_stft_64": "data/stead_learn_stft_64.hdf5",
+    "stead_test_stft_64": "data/stead_test_stft_64.hdf5",
     "stead_learn_stft": "data/stead_learn_stft.hdf5",
     "stead_test_stft": "data/stead_test_stft.hdf5",
     "stead_learn_raw": "data/stead_learn_raw.hdf5",
