@@ -33,7 +33,10 @@ def plot_all(do, label, file_path=None):
     d1 = pd.DataFrame(data=do[1][:SAMPLES])
     d2 = pd.DataFrame(data=do[2][:SAMPLES])
 
-    fig = plt.figure(figsize=(16, 10), dpi=80)
+    plt.rc('font', size=11)
+    plt.rc('axes', titlesize=16)
+
+    fig = plt.figure(figsize=(16, 10), dpi=227)
     ax1 = plt.subplot2grid((5, 6), (0, 0), colspan=3)
     ax2 = plt.subplot2grid((5, 6), (1, 0), colspan=3)
     ax3 = plt.subplot2grid((5, 6), (2, 0), colspan=3)
@@ -51,15 +54,15 @@ def plot_all(do, label, file_path=None):
     sns.lineplot(data=d2, ax=ax3, linewidth=1, legend=None)
 
     ax1.set_title("Vertical component waveform")
-    ax1.set(xlabel="Samples", ylabel="Amplitude counts")
+    ax1.set(xlabel="Samples", ylabel="Amp. counts")
     ax1.locator_params(nbins=6, axis="y")
 
     ax2.set_title("North component waveform")
-    ax2.set(xlabel="Samples", ylabel="Amplitude counts")
+    ax2.set(xlabel="Samples", ylabel="Amp. counts")
     ax2.locator_params(nbins=6, axis="y")
 
     ax3.set_title("East component waveform")
-    ax3.set(xlabel="Samples", ylabel="Amplitude counts")
+    ax3.set(xlabel="Samples", ylabel="Amp. counts")
     ax3.locator_params(nbins=6, axis="y")
 
     f_0, t_0, Sxx_0 = spectrogram(x=do[0], fs=FS)
@@ -69,19 +72,19 @@ def plot_all(do, label, file_path=None):
     ax4.clear()
     ax4.set_title("Vertical component spectrogram")
     _ax4 = ax4.pcolormesh(t_0, f_0, Sxx_0, shading="gouraud")
-    ax4.set(xlabel="Time [sec]", ylabel="Frequency [Hz]")
+    ax4.set(xlabel="Time [sec]", ylabel="Freq. [Hz]")
     fig.colorbar(_ax4, ax=ax4)
 
     ax5.clear()
     ax5.set_title("North component spectrogram")
     _ax5 = ax5.pcolormesh(t_1, f_1, Sxx_1, shading="gouraud")
-    ax5.set(xlabel="Time [sec]", ylabel="Frequency [Hz]")
+    ax5.set(xlabel="Time [sec]", ylabel="Freq. [Hz]")
     fig.colorbar(_ax5, ax=ax5)
 
     ax6.clear()
     ax6.set_title("East component spectrogram")
     _ax6 = ax6.pcolormesh(t_2, f_2, Sxx_2, shading="gouraud")
-    ax6.set(xlabel="Time [sec]", ylabel="Frequency [Hz]")
+    ax6.set(xlabel="Time [sec]", ylabel="Freq. [Hz]")
     fig.colorbar(_ax6, ax=ax6)
 
     f_sftt_0, t_sftt_0, Zxx_0 = stft(do[0], window="hanning", fs=FS, nperseg=NPERSEG)
@@ -108,7 +111,7 @@ def plot_all(do, label, file_path=None):
     plt.suptitle(label, fontsize=14)
 
     if file_path != None:
-        plt.savefig(file_path)
+        plt.savefig(file_path, bbox_inches='tight')
         plt.close(fig)
 
 
