@@ -3,6 +3,8 @@
 
 # Outs
 out*/
+*.pdf
+*.png
 
 # Examples
 examples/*
